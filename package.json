@@ -1,0 +1,14 @@
+{
+  "name": "album2video",
+  "version": "1.0.0",
+  "description": "converts sound files into a youtube-uploadable format",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "quak",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^13.1.7"
+  }
+}
