@@ -4,11 +4,18 @@
   "description": "converts sound files into a youtube-uploadable format",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron ."
   },
   "author": "quak",
-  "license": "ISC",
+  "license": "APGL-3.0",
   "devDependencies": {
-    "electron": "^13.1.7"
+    "@electron-forge/cli": "^6.0.0-beta.59",
+    "electron": "^13.1.7",
+    "trim-newlines": "^4.0.2"
+  },
+  "dependencies": {
+    "newlines": "^0.1.0",
+    "trim": "^1.0.1"
   }
 }
