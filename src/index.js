@@ -22,7 +22,8 @@ const browseOutputBtn = document.getElementById('browse-output');
 browseOutputBtn.addEventListener('click', function() {
 	if (this.getAttribute("browsetype") == "directory") {
 		ipcRenderer.send("browse-output-directory");
-	} else if (this.getAttribute("browsetype" == "path") {
+	}
+	if (this.getAttribute("browsetype") == "path") {
 		ipcRenderer.send("browse-output-path");
 	}
 });
