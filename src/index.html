@@ -3,16 +3,16 @@
 	<head>
 		<meta charset="UTF-8">    
 		<!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->    
-		<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
-		<meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'">
+		<!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'"> -->
+		<!-- <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'"> -->
 		<link rel="stylesheet" href="../assets/index.css">
 		<title>album2video</title>
 	</head>
-	<body>
+	<body class="light">
 		<div id="input">
-			<label for="album-dir">enter album directory</label>
+			<label for="album-dir">album directory</label>
 			<input type="text" id="album-dir"></input> <button id="browse-album">browse</button><br>
-			<label for="cover-path">enter cover art path</label>
+			<label for="cover-path">cover art path</label>
 			<input type="text" id="cover-path"></input> <button id="browse-cover">browse</button><br>
 			<label for="detect-cover">detect cover?</label>
 			<input type="checkbox" id="detect-cover">
@@ -22,10 +22,10 @@
 		<div id="output">
 			<span>timestamps</span><br>
 			<textarea id="timestamps" readonly></textarea><br>
-			<label for "output-path">enter output path</label>
+			<label for="output-path">output path</label>
 			<input type="text" id="output-path"></input> <button id="browse-output">browse</button>
 		</div>
-		<button id="submit">make video</button>
+		<div id="submit-div"><button id="submit">make video</button></div>
 		<script src="./index.js"></script>
 	</body>
 </html>

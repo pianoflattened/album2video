@@ -10,7 +10,7 @@ function createWindow () {
 			nodeIntegration: true,
 			contextIsolation: false
 		},
-		resizable: false,
+		//resizable: false,
 		autoHideMenuBar: true
 	});
 	win.loadFile('src/index.html');

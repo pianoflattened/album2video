@@ -6,7 +6,20 @@ body {
 }
 
 #timestamps {
-	width: calc(100% - 8px);
+	min-width: 350px;
 	height: 10rem;
 	resize: none;
+}
+
+.dark .grayout {
+	background: #222!important;
+}
+
+.light .grayout {
+	background: #ddd!important;
+}
+
+#submit-div {
+	text-align: right;
+	margin-top: 0.5rem;
 }
