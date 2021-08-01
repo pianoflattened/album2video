@@ -39,6 +39,7 @@ ipcMain.on("browse-album", function(event) {
 	dialog.showOpenDialog({properties: ['openDirectory', 'showHiddenFiles']}).then(result => {
 		if (!result.canceled) {
 			event.reply("browse-album-successful", result.filePaths[0]);
+			
 			console.log("album filePaths: " + result.filePaths);
 		}
 	}).catch(err => {
@@ -81,4 +82,8 @@ ipcMain.on("browse-output-directory", function(event) {
 
 ipcMain.on("make-video", function(event, args) {
 	console.log(args);
+});
+
+ipcMain.on("error-get-tags", function(event, args) {
+	console.log(args); // make popup windows for this
 });

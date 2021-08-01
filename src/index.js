@@ -1,21 +1,32 @@
 const { ipcRenderer } = require("electron");
 
+const form = {
+	albumDirectory: document.getElementById("album-dir"),
+	coverPath: document.getElementById("cover-path"),
+	detectCover: document.getElementById("detect-cover"),
+	separateVideos: document.getElementById("separate-videos"),
+	outputPath: document.getElementById("output-path")
+}
+const submitBtn = document.getElementById('submit');
+function updateSubmitBtn(f) {
+	submitBtn.disabled = !(f.albumDirectory.value && (f.coverPath.value || f.detectCover.checked) && f.outputPath.value);
+}
+
+// file browse events
 const browseAlbumBtn = document.getElementById('browse-album');
-const albumDirInput = document.getElementById("album-dir");
 browseAlbumBtn.addEventListener('click', function() {
 	ipcRenderer.send("browse-album");
 });
 ipcRenderer.on("browse-album-successful", function(event, filePath) {
-	albumDirInput.value = filePath;
+	form.albumDirectory.value = filePath;
 });
 
 const browseCoverBtn = document.getElementById('browse-cover');
-const coverPathInput = document.getElementById('cover-path');
 browseCoverBtn.addEventListener('click', function() {
 	ipcRenderer.send("browse-cover");
 });
 ipcRenderer.on("browse-cover-successful", function(event, filePath) {
-	coverPathInput.value = filePath;
+	form.coverPath.value = filePath;
 });
 
 const browseOutputBtn = document.getElementById('browse-output');
@@ -31,48 +42,49 @@ ipcRenderer.on("browse-output-successful", function(event, filePath) {
 	document.getElementById("output-path").value = filePath;
 });
 
-const detectCoverCheckbox = document.getElementById('detect-cover');
-detectCoverCheckbox.addEventListener('change', function() {
+
+form.detectCover.addEventListener('change', function() {
 	if (this.checked) {
 		console.log("checked");
-		coverPathInput.setAttribute("class", "grayout");
-		coverPathInput.setAttribute("readonly", "");
+		form.coverPath.setAttribute("disabled", "");
 	} else {
 		console.log("unchecked");
-		coverPathInput.removeAttribute("class");
-		coverPathInput.removeAttribute("readonly");
+		form.coverPath.removeAttribute("disabled");
 	}
 });
 
-const separateVideosCheckbox = document.getElementById('separate-videos');
 const outputPathLabel = document.querySelector('label[for="output-path"]');
-const outputPath = document.getElementById("output-path");
+let outdir ="";
 let outpath = "";
-let outdir = "";
-separateVideosCheckbox.addEventListener('change', function() {
+form.separateVideos.addEventListener('change', function() {
 	if (this.checked) {
-		console.log("checked");
-		outpath = outputPath.value;
+		outpath = form.outputPath.value;
 		outputPathLabel.textContent = "output directory";
 		browseOutputBtn.setAttribute("browsetype", "directory");
-		outputPath.value = outdir;
+		browsetype = "directory";
+		form.outputPath.value = outdir;
 	} else {
-		console.log("unchecked");
-		outdir = outputPath.value;
+		outdir = form.outputPath.value;
 		outputPathLabel.textContent = "output path";
 		browseOutputBtn.setAttribute("browsetype", "path");
-		outputPath.value = outpath;
+		browsetype = "path";
+		form.outputPath.value = outpath;
 	}
+	updateSubmitBtn(form); // fixes a bug where checking the separate videos box breaks the submit 
+						   // button because the event fire off in an order i cant control
 });
 
-const submitBtn = document.getElementById('submit');
+for (const key in form) {
+	form[key].addEventListener('input', function() {
+		console.log(form.outputPath.value);
+		updateSubmitBtn(form);
+	});
+}
+
 submitBtn.addEventListener('click', function() {
-	let a2vCallObj = {};
-	a2vCallObj.albumDir = albumDirInput.value;
-	a2vCallObj.coverPath = coverPathInput.value;
-	a2vCallObj.detectCover = detectCoverCheckbox.checked;
-	a2vCallObj.separateVideos = separateVideosCheckbox.checked;
-	a2vCallObj.outputPath = outputPath.value;
-	
-	ipcRenderer.send("make-video", a2vCallObj);
+	let formData = {};
+	for (const key in form) {
+		formData[key] = form[key].value;
+	}
+	ipcRenderer.send("make-video", formData);
 });

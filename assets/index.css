@@ -25,18 +25,18 @@ input, button, textarea {
 	color: #000;
 }
 
+.dark :disabled {
+	color: #434343;
+}
+
+.light :disabled {
+	color: #b3b3b3;
+}
+
 #timestamps {
 	min-width: 350px;
 	height: 10rem;
 	resize: none;
-}
-
-.dark .grayout {
-	background: #333!important;
-}
-
-.light .grayout {
-	background: #ddd!important;
 }
 
 #submit-div {
