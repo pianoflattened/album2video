@@ -38,8 +38,18 @@ ipcMain.on("browse-album", function(event) {
 		if (!result.canceled) {
 			event.reply("browse-album-successful", result.filePaths[0]);
 		}
-		console.log("canceled: " + result.canceled);
-		console.log("filePaths: " + result.filePaths);
+		console.log("album filePaths: " + result.filePaths);
+	}).catch(err => {
+		console.log(err);
+	});
+});
+
+ipcMain.on("browse-cover", function(event) {
+	dialog.showOpenDialog({properties: ['openFile', 'showHiddenFiles', 'dontAddToRecent']}).then(result => {
+		if (!result.canceled) {
+			event.reply("browse-cover-successful", result.filePaths[0]);
+		}
+		console.log("cover filePaths: " + result.filePaths);
 	}).catch(err => {
 		console.log(err);
 	});
