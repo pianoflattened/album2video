@@ -33,6 +33,8 @@ detectCoverCheckbox.addEventListener('change', function() {
 const separateVideosCheckbox = document.getElementById('separate-videos');
 const outputPathLabel = document.querySelector('label[for="output-path"]');
 separateVideosCheckbox.addEventListener('change', function() {
+	// reminder - if there is a file at the end of the path string and this box is checked, the 
+	// folder which the file is in should be used
 	if (this.checked) {
 		console.log("checked");
 		outputPathLabel.textContent = "output directory";
@@ -42,10 +44,14 @@ separateVideosCheckbox.addEventListener('change', function() {
 	}
 });
 
-
 const submitBtn = document.getElementById('submit');
 submitBtn.addEventListener('click', function() {
-	let albumDir = document.getElementById("album-dir").value;
-	let coverPath = document.getElementById("cover-path").value;
-	ipcRenderer.send("make-video", );
+	let a2vCallObj = {};
+	a2vCallObj.albumDir = document.getElementById("album-dir").value;
+	a2vCallObj.coverPath = document.getElementById("cover-path").value;
+	a2vCallObj.detectCover = document.getElementById("detect-cover").checked;
+	a2vCallObj.separateVideos = document.getElementById("separate-videos").checked;
+	a2vCallObj.outputPath = document.getElementById("output-path").value;
+	
+	ipcRenderer.send("make-video", a2vCallObj);
 });

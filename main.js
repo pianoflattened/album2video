@@ -19,12 +19,12 @@ function createWindow () {
 app.whenReady().then(() => {
 	createWindow();
 	
-	app.on('activate', function (){ 
+	app.on('activate', function () { 
 		if (BrowserWindow.getAllWindows().length === 0) createWindow();
 	});
 });
 
-app.on('window-all-closed', function (){
+app.on('window-all-closed', function () {
 	if (process.platform !== 'darwin') app.quit()
 });
 
@@ -53,4 +53,8 @@ ipcMain.on("browse-cover", function(event) {
 	}).catch(err => {
 		console.log(err);
 	});
+});
+
+ipcMain.on("make-video", function(event, args) {
+	console.log(args);
 });
