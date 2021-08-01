@@ -17,6 +17,14 @@ ipcRenderer.on("browse-cover-successful", function(event, filePath) {
 	coverPathInput.value = filePath;
 });
 
+const browseOutputBtn = document.getElementById('browse-output');
+browseOutputBtn.addEventListener('click', function() {
+	ipcRenderer.send("browse-output");
+});
+ipcRenderer.on("browse-output-successful", function(event, filePath) {
+	document.getElementById("output-path").value = filePath;
+});
+
 const detectCoverCheckbox = document.getElementById('detect-cover');
 detectCoverCheckbox.addEventListener('change', function() {
 	if (this.checked) {
@@ -34,7 +42,8 @@ const separateVideosCheckbox = document.getElementById('separate-videos');
 const outputPathLabel = document.querySelector('label[for="output-path"]');
 separateVideosCheckbox.addEventListener('change', function() {
 	// reminder - if there is a file at the end of the path string and this box is checked, the 
-	// folder which the file is in should be used
+	// folder which the file is in should be used. if the path string is a folder and this box is 
+	// left unchecked, a default name format will be used
 	if (this.checked) {
 		console.log("checked");
 		outputPathLabel.textContent = "output directory";

@@ -34,7 +34,7 @@ ipcMain.on("auto-resize", function(event, width, height) {
 });
 
 ipcMain.on("browse-album", function(event) {
-	dialog.showOpenDialog({properties: ['openDirectory', 'showHiddenFiles', 'dontAddToRecent']}).then(result => {
+	dialog.showOpenDialog({properties: ['openDirectory', 'showHiddenFiles']}).then(result => {
 		if (!result.canceled) {
 			event.reply("browse-album-successful", result.filePaths[0]);
 		}
@@ -45,11 +45,22 @@ ipcMain.on("browse-album", function(event) {
 });
 
 ipcMain.on("browse-cover", function(event) {
-	dialog.showOpenDialog({properties: ['openFile', 'showHiddenFiles', 'dontAddToRecent']}).then(result => {
+	dialog.showOpenDialog({properties: ['openFile', 'showHiddenFiles']}).then(result => {
 		if (!result.canceled) {
 			event.reply("browse-cover-successful", result.filePaths[0]);
 		}
 		console.log("cover filePaths: " + result.filePaths);
+	}).catch(err => {
+		console.log(err);
+	});
+});
+
+ipcMain.on("browse-output", function(event) {
+	dialog.showOpenDialog({properties: ['openFile', 'openDirectory', 'showHiddenFiles']}).then(result => {
+		if (!result.canceled) {
+			event.reply("browse-output-successful", result.filePaths[0]);
+		}
+		console.log("output filePaths: " + result.filePaths);
 	}).catch(err => {
 		console.log(err);
 	});
