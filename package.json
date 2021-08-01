@@ -11,11 +11,10 @@
   "license": "APGL-3.0",
   "devDependencies": {
     "@electron-forge/cli": "^6.0.0-beta.59",
-    "electron": "^13.1.7",
-    "trim-newlines": "^4.0.2"
+    "electron": "^13.1.7"
   },
   "dependencies": {
-    "newlines": "^0.1.0",
-    "trim": "^1.0.1"
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@ffprobe-installer/ffprobe": "^1.1.0"
   }
 }
