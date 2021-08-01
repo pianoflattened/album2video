@@ -16,6 +16,7 @@
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@ffprobe-installer/ffprobe": "^1.1.0",
+    "electron-progressbar": "^2.0.1",
     "fluent-ffmpeg": "^2.1.2",
     "mmmagic": "^0.5.3"
   }
