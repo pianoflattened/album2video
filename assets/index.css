@@ -5,6 +5,26 @@ body {
 	display: inline-block;
 }
 
+body.dark {
+	background-color: #000;
+	color: #e0e0e0;
+}
+
+input, button, textarea {
+	border-width: 1px;
+	border-radius: 3px;
+}
+
+.dark input, .dark textarea, .dark button {
+	background-color: #000;
+	color: #e0e0e0;
+}
+
+.light input, .light textarea, .light button {
+	background-color: #fff;
+	color: #000;
+}
+
 #timestamps {
 	min-width: 350px;
 	height: 10rem;
@@ -12,7 +32,7 @@ body {
 }
 
 .dark .grayout {
-	background: #222!important;
+	background: #333!important;
 }
 
 .light .grayout {
