@@ -1,3 +1,5 @@
+// TODO: set or remove app icon
+
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
 const path = require('path');
 function createWindow () {  
