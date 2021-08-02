@@ -5,33 +5,56 @@
 		<!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->    
 		<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
 		<meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'">
-		<link rel="stylesheet" href="../assets/bootstrap/css/bootstrap.min.css">
-		<script scr="../assets/bootstrap/js/bootstrap.min.js"></script>
+		<link rel="stylesheet" href="../assets/bootstrap/bootstrap.min.css">
+		<script src="../assets/bootstrap/bootstrap.min.js"></script>
 		<link rel="stylesheet" href="../assets/index.css">
 		<title>album2video</title>
 	</head>
 	<body class="dark">
-		<div id="input">
-			<label for="album-dir">album directory</label>
-			<input type="text" id="album-dir"> <button id="browse-album">browse</button><br>
-			<label for="cover-path">cover art path</label>
-			<input type="text" id="cover-path"> <button id="browse-cover">browse</button><br>
-			<label for="detect-cover">detect cover?</label>
-			<input type="checkbox" id="detect-cover">
-			<label for="album-dir">separate videos?</label>
-			<input type="checkbox" id="separate-videos">
+		<!-- <label for="album-dir" class="form-label">album directory</label> -->
+		<div class="input-group mb-3">
+			<input type="text" class="form-control" id="album-dir" placeholder="album directory" aria-label="album directory" aria-describedby="browse-album">
+			<button class="btn btn-secondary input-group-text" id="browse-album">browse</button>
 		</div>
-		<div id="output">
-			<span>timestamps</span><br>
-			<textarea id="timestamps" readonly></textarea><br>
-			<label for="output-path">output path</label>
-			<input type="text" id="output-path"> <button id="browse-output" browsetype="path">browse</button>
+
+		<div class="input-group mb-3">
+			<input type="text" class="form-control" id="cover-path" placeholder="cover path" aria-label="cover path" aria-describedby="browse-cover">
+			<button class="btn btn-secondary input-group-text" id="browse-cover">browse</button>
 		</div>
+		
+		<div class="form-check form-check-inline">
+			<input class="form-check-input" type="checkbox" value="" id="detect-cover">
+			<label class="form-check-label" for="detect-cover">detect cover?</label>
+		</div>
+
+		<div class="form-check form-check-inline">
+			<input class="form-check-input" type="checkbox" value="" id="separate-videos">
+			<label class="form-check-label" for="separate-videos">separate videos?</label>
+		</div>
+		
+		<hr>
+		
+		<div class="mb-3">
+			<label for="timestamps" class="form-label">timestamps</label>
+			<textarea class="form-control" id="timestamps" rows="12" readonly></textarea>
+		</div>
+		
+		<div class="input-group mb-3">
+			<input type="text" class="form-control" id="output-path" placeholder="output path" aria-label="output path" aria-describedby="browse-output">
+			<button class="btn btn-secondary input-group-text" id="browse-output" browsetype="path">browse</button>
+		</div>
+
+		<hr>
+		
 		<div id="finish">
-			<span id="progress-label">&nbsp;</span>
 			<div id="submit-div">
-				<progress id="progress" value=0 maxValue=100></progress>
-				<button disabled id="submit">make video</button>
+				<div class="progress-container">
+					<span id="progress-label">loading..&nbsp;</span>
+					<div class="progress">
+						<div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+					</div>
+				</div>
+				<button class="btn btn-primary" id="submit" disabled>make video</button>
 			</div>
 		</div>
 		<script src="./index.js"></script>

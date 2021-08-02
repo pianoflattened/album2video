@@ -57,19 +57,18 @@ form.detectCover.addEventListener('change', function() {
 	}
 });
 
-const outputPathLabel = document.querySelector('label[for="output-path"]');
 let outdir ="";
 let outpath = "";
 form.separateVideos.addEventListener('change', function() {
 	if (this.checked) {
 		outpath = form.outputPath.value;
-		outputPathLabel.textContent = "output directory";
+		form.outputPath.placeholder = "output directory";
 		browseOutputBtn.setAttribute("browsetype", "directory");
 		browsetype = "directory";
 		form.outputPath.value = outdir;
 	} else {
 		outdir = form.outputPath.value;
-		outputPathLabel.textContent = "output path";
+		form.outputPath.placeholder = "output path";
 		browseOutputBtn.setAttribute("browsetype", "path");
 		browsetype = "path";
 		form.outputPath.value = outpath;

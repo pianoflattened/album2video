@@ -9,6 +9,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		replaceText(`${dependency}-version`, process.versions[dependency])  
 	}
 	
-	let width = document.getElementById("input").clientWidth + 17;
+	let width = document.body.clientWidth + 17;
 	ipcRenderer.send('auto-resize', width, document.body.clientHeight + 17);
 });
