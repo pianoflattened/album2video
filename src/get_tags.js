@@ -3,7 +3,6 @@ const { ffprobeSync } = require('kiss-ffmpeg');
 const fs = require('fs');
 const mime = require('mime-types');
 const path = require('path');
-const ProgressBar = require('./progress_bar.js');
 var sizeOf = require('image-size');
 
 ffprobeSync.command = ffprobePath;
@@ -35,12 +34,9 @@ function overallTrackNumber(track, disc, discTracks) {
 
 module.exports = function getTags(form, progressBar) {
 	// indeterminate progress bar
-	/* let progressBar = new ProgressBar({
-		title: 'album2video',
-		text: 'collecting files',
-		detail: 'validating album path..'
-	});*/
-	
+	progressBar.makeIndeterminate();
+	progressBar.setLabel('collecting files - validating album path..')
+
 	console.log(form.albumDirectory);
 
 	let stats;
@@ -58,7 +54,7 @@ module.exports = function getTags(form, progressBar) {
 	}
 
 	// loop through form.albumDirectory
-	progressBar.detail = 'reading ' + form.albumDirectory + '..';
+	progressBar.setLabel('collecting files - reading ' + form.albumDirectory + '..');
 	const albumDir = fs.opendirSync(form.albumDirectory);
 	var audioFiles = [];
 	let imageFiles = {};
@@ -71,7 +67,7 @@ module.exports = function getTags(form, progressBar) {
 		console.log(f.name);
 		if (f.name != "concat.wav") {
 			fullpath = path.join(form.albumDirectory, f.name);
-			progressBar.detail = 'reading ' + fullpath + '..';
+			progressBar.setLabel('collecting files - reading ' + fullpath + '..');
 
 			fileMimetype = mime.lookup(fullpath);
 			console.log(fileMimetype);
@@ -112,20 +108,20 @@ module.exports = function getTags(form, progressBar) {
 					break;
 			}
 
-			progressBar.detail = 'checking if ' + form.albumDirectory + 'has no sound files..';
+			progressBar.setLabel('collecting files - checking if ' + form.albumDirectory + 'has no sound files..');
 			if (!audioFiles) { // if form.albumDirectory has no sound files return an error
 				progressBar.error(form.albumDirectory + ' does not contain any sound files');
 				return false;
 			}
 
-			progressBar.detail = 'ordering audio files..';
+			progressBar.setLabel('collecting files - ordering audio files..');
 			audioFiles.sort(function(a, b) {
 				aOverall = overallTrackNumber(a.track, a.disc, discTracks);
 				bOverall = overallTrackNumber(b.track, b.disc, discTracks);
 				return Math.sign(aOverall - bOverall);
 			});
 
-			progressBar.detail = 'checking cover art..';
+			progressBar.setLabel('collecting files - checking cover art..');
 			// if form.detectCover is on + no image files set the cover to a 1920 x 1080 all black image
 			if (!imageFiles && form.detectCover) { 
 				form.coverPath = '../assets/black.png'
@@ -144,7 +140,7 @@ module.exports = function getTags(form, progressBar) {
 					return false;
 				}
 			} else {
-				progressBar.detail = 'choosing cover art..';
+				progressBar.setLabel('collecting files - choosing cover art..');
 				let found = false; // check for these names, highest to lowest priority
 				["folder.png", "cover.png", "folder.jpg", "cover.jpg"].forEach(function(n) {
 					if (n in imageFiles) {
@@ -198,6 +194,7 @@ module.exports = function getTags(form, progressBar) {
 		}
 	}
 	
+	progressBar.setComplete();
 	return { // return object with relevant tags + location of cover art
 		form: form,
 		audioFiles: audioFiles

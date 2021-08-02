@@ -1,4 +1,6 @@
 const { app, ipcRenderer } = require("electron");
+const getTags = require('./get_tags.js');
+const ProgressBar = require('./progress_bar.js');
 
 var progressBar;
 const form = {
@@ -94,9 +96,6 @@ submitBtn.addEventListener('click', function() {
 		}
 	}
 	
-	ipcRenderer.send('make-video', formData);
-});
-
-ipcRenderer.on('set-progress-bar', function (event, detail) {
-	progressBar.detail = detail;
+	let progressBar = new ProgressBar(document.querySelector(".progress-container"));
+	console.log(getTags(formData, progressBar));
 });

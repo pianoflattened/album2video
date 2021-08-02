@@ -34,4 +34,12 @@ module.exports = class ProgressBar {
 		}
 		this.setLabel("done!");
 	}
+	
+	error(msg) {
+		this._bar.setAttribute("aria-valuenow", "100");
+		if (this._bar.classList.contains("progress-bar-animated")) {
+			this._bar.classList.remove("progress-bar-animated");
+		}
+		this.setLabel(msg);
+	}
 }
