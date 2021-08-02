@@ -1,4 +1,5 @@
 const ffprobePath = require('@ffprobe-installer/ffprobe').path;
+const { ffprobeSync } = require('kiss-ffmpeg');
 const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
 const mime = require('mime-types');
@@ -6,7 +7,7 @@ const path = require('path');
 const ProgressBar = require('./progress_bar.js');
 var sizeOf = require('image-size');
 
-ffmpeg.setFfprobePath(ffprobePath);
+ffprobeSync.command = ffprobePath;
 
 // makes directories synchronously iterable. thankz stack over flow :D
 const p = fs.Dir.prototype;
@@ -66,7 +67,7 @@ module.exports = function getTags (form) {
 	let disc;
 	let track;
 	let fileMimetype;
-	let id3Data;
+	let metadata;
 	for (const f of albumDir) {
 		console.log(f.name);
 		if (f.name != "concat.wav") {
@@ -77,34 +78,33 @@ module.exports = function getTags (form) {
 			console.log(fileMimetype);
 			switch (fileMimetype.split("/")[0]) {
 				case "audio": // if mimetype is audio/* then get its tags + store in dictionary with path as key
-					ffmpeg.ffprobe(fullpath, function(err, metadata) { // BUG: I HAVE TO MAKE THIS SYNCHRONOUS FOR IT TO WORK !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-						if (err) {
-							progressBar.error(err.toString());
-						}
-						id3Data = metadata.format;
-						if (id3Data.tags.disc) {
-							disc = parseInt(id3Data.tags.disc.split("/")[0]);
-						} else { disc = 1; }
-						track = parseInt(id3Data.tags.track.split("/")[0]);
-						audioFiles.push({
-							filename: id3Data.filename, 
-							fullpath: fullpath,
-							artist: id3Data.tags.artist,
-							albumArtist: id3Data.tags.albumArtist || "",
-							title: id3Data.tags.title,
-							track: track,
-							disc: disc,
-							length: parseFloat(id3Data.duration) - parseFloat(id3Data.start_time)
-						});
-						console.log(audioFiles);
-						if (discTracks[disc]) {
-							if (discTracks[disc] < track) {
-								discTracks[disc] = track;
-							}
-						} else {
+					try {
+						metadata = ffprobeSync(fullpath).format;
+					} catch (err) {
+						progressBar.error(err.toString());
+					}
+					if (metadata.tags.disc) {
+						disc = parseInt(metadata.tags.disc.split("/")[0]);
+					} else { disc = 1; }
+					track = parseInt(metadata.tags.track.split("/")[0]);
+					audioFiles.push({
+						filename: metadata.filename, 
+						fullpath: fullpath,
+						artist: metadata.tags.artist,
+						albumArtist: metadata.tags.albumArtist || "",
+						title: metadata.tags.title,
+						track: track,
+						disc: disc,
+						length: parseFloat(metadata.duration) - parseFloat(metadata.start_time)
+					});
+					console.log(audioFiles);
+					if (discTracks[disc]) {
+						if (discTracks[disc] < track) {
 							discTracks[disc] = track;
 						}
-					});
+					} else {
+						discTracks[disc] = track;
+					}
 					break;
 				case "image": // if mimetype is image/* and form.detectCover add it to cover art candidates list
 					if (form.detectCover) imageFiles[f.name] = fullpath;

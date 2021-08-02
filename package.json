@@ -20,6 +20,7 @@
     "electron-progressbar": "^2.0.1",
     "fluent-ffmpeg": "^2.1.2",
     "image-size": "^1.0.0",
+    "kiss-ffmpeg": "^0.4.2",
     "mime-types": "^2.1.32"
   }
 }
