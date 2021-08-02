@@ -25,6 +25,14 @@ Object.defineProperty(p, Symbol.iterator, {
 	writable: true
 });
 
+function overallTrackNumber(track, disc, discTracks) {
+	let n = track;
+	for (let i = 0; i <= disc-2; i++) {
+		n += discTracks[i];
+	}
+	return n;
+}
+
 module.exports = function getTags (form) {
 	// indeterminate progress bar
 	let progressBar = new ProgressBar({
@@ -52,109 +60,147 @@ module.exports = function getTags (form) {
 	// loop through form.albumDirectory
 	progressBar.detail = 'reading ' + form.albumDirectory + '..';
 	const albumDir = fs.opendirSync(form.albumDirectory);
-	let audioFiles = {};
+	var audioFiles = [];
 	let imageFiles = {};
-	
+	let discTracks = {};
+	let disc;
+	let track;
+	let fileMimetype;
+	let id3Data;
 	for (const f of albumDir) {
-		fullpath = path.join(form.albumDirectory, f.name);
-		progressBar.detail = 'reading ' + fullpath + '..';
-		
-		let file_mimetype = mime.lookup(fullpath);
-		console.log(file_mimetype);
-		switch (file_mimetype.split("/")[0]) {
-			case "audio": // if mimetype is audio/* then get its tags + store in dictionary with path as key
-				ffmpeg.ffprobe(fullpath, function(err, metadata) {
-					if (err) {
-						progressBar.error(err.toString());
-					}
-					audioFiles[f.name] = metadata.format;
-				}).catch(err, () => console.log(err));
-				break;
-			case "image": // if mimetype is image/* and form.detectCover add it to cover art candidates list
-				if (form.detectCover) imageFiles[f.name] = fullpath;
-				break;
-			default:
-				break;
-		}
-		
-		progressBar.detail = 'checking if ' + form.albumDirectory + 'has no sound files..';
-		if (!audioFiles) { // if form.albumDirectory has no sound files return an error
-			progressBar.error(form.albumDirectory + ' does not contain any sound files');
-			return false;
-		}
-		
-		progressBar.detail = 'ordering sound files..';
-		
-		progressBar.detail = 'checking cover art..';
-		// if form.detectCover is on and there are no image files then set the cover to a 1920 x 1080 all black image
-		if (!imageFiles && form.detectCover) { 
-			form.coverPath = '../assets/black.png'
-		}
-		
-		if (!form.detectCover) { // if form.detectCover is off then check if form.coverPath exists
-			let stats;
-			try { // check if form.coverPath exists + is a file
-				stats = fs.statSync(form.coverPath);
-			} catch (err) { // if it doesn't exist return an error
-				progressBar.error(err.toString()); 
-				return false; 
+		console.log(f.name);
+		if (f.name != "concat.wav") {
+			fullpath = path.join(form.albumDirectory, f.name);
+			progressBar.detail = 'reading ' + fullpath + '..';
+
+			fileMimetype = mime.lookup(fullpath);
+			console.log(fileMimetype);
+			switch (fileMimetype.split("/")[0]) {
+				case "audio": // if mimetype is audio/* then get its tags + store in dictionary with path as key
+					ffmpeg.ffprobe(fullpath, function(err, metadata) { // BUG: I HAVE TO MAKE THIS SYNCHRONOUS FOR IT TO WORK !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+						if (err) {
+							progressBar.error(err.toString());
+						}
+						id3Data = metadata.format;
+						if (id3Data.tags.disc) {
+							disc = parseInt(id3Data.tags.disc.split("/")[0]);
+						} else { disc = 1; }
+						track = parseInt(id3Data.tags.track.split("/")[0]);
+						audioFiles.push({
+							filename: id3Data.filename, 
+							fullpath: fullpath,
+							artist: id3Data.tags.artist,
+							albumArtist: id3Data.tags.albumArtist || "",
+							title: id3Data.tags.title,
+							track: track,
+							disc: disc,
+							length: parseFloat(id3Data.duration) - parseFloat(id3Data.start_time)
+						});
+						console.log(audioFiles);
+						if (discTracks[disc]) {
+							if (discTracks[disc] < track) {
+								discTracks[disc] = track;
+							}
+						} else {
+							discTracks[disc] = track;
+						}
+					});
+					break;
+				case "image": // if mimetype is image/* and form.detectCover add it to cover art candidates list
+					if (form.detectCover) imageFiles[f.name] = fullpath;
+					break;
+				default:
+					break;
 			}
-			if (stats.isFile()) { /* pass */ } else { // if it's not a file return an error
-				progressBar.error(form.coverPath + ' is not a file');
+
+			progressBar.detail = 'checking if ' + form.albumDirectory + 'has no sound files..';
+			if (!audioFiles) { // if form.albumDirectory has no sound files return an error
+				progressBar.error(form.albumDirectory + ' does not contain any sound files');
 				return false;
 			}
-		} else {
-			progressBar.detail = 'choosing cover art..';
-			let found = false; // check for these names, highest to lowest priority
-			["folder.png", "cover.png", "folder.jpg", "cover.jpg"].forEach(function(n) {
-				if (n in imageFiles) {
-					form.coverPath = imageFiles[n];
-					found = true;
-				}
+
+			progressBar.detail = 'ordering audio files..';
+			audioFiles.sort(function(a, b) {
+				aOverall = overallTrackNumber(a.track, a.disc, discTracks);
+				bOverall = overallTrackNumber(b.track, b.disc, discTracks);
+				return aOverall - bOverall;
 			});
-			
-			// i could definitely optimize this section what with the recalculating of image sizes 3 times 
-			// in a row BUT this is the easiest way for me to conceptualize this and i just want it to work
-			if (!found) { // largest image that has "cover" in its name
-				let withCover = {};
-				let dim;
-				Object.keys(imageFiles).forEach(function(key) {
-					if (key.toLowerCase().includes("cover")) {
-						dim = sizeOf(imageFiles[key]);
-						withCover[dim.width*dim.height] = imageFiles[key];
-					}
-				});
-				if (withCover) {
-					form.coverPath = withCover[Math.max(...Object.keys(withCover))];
-					found = true;
-				} 
+
+			progressBar.detail = 'checking cover art..';
+			// if form.detectCover is on + no image files set the cover to a 1920 x 1080 all black image
+			if (!imageFiles && form.detectCover) { 
+				form.coverPath = '../assets/black.png'
 			}
-			
-			if (!found) { // largest image that has "art" in its name
-				let withArt = {};
-				let dim;
-				Object.keys(imageFiles).forEach(function(key) {
-					if (key.toLowerCase().includes("art")) {
-						dim = sizeOf(imageFiles[key]);
-						withCover[dim.width*dim.height] = imageFiles[key];
-					}
-				});
-				if (withArt) {
-					form.coverPath = withArt[Math.max(...Object.keys(withArt))];
-					found = true;
+
+			if (!form.detectCover) { // if form.detectCover is off then check if form.coverPath exists
+				let stats;
+				try { // check if form.coverPath exists + is a file
+					stats = fs.statSync(form.coverPath);
+				} catch (err) { // if it doesn't exist return an error
+					progressBar.error(err.toString()); 
+					return false; 
 				}
-			}
-			
-			if (!found) { // largest image in directory
-				let covers = {};
-				let dim;
-				Object.keys(imageFiles).forEach(function(key) {
-					dim = sizeOf(imageFiles[key]);
-					covers[dim.width*dim.height] = imageFiles[key];
+				if (stats.isFile()) { /* pass */ } else { // if it's not a file return an error
+					progressBar.error(form.coverPath + ' is not a file');
+					return false;
+				}
+			} else {
+				progressBar.detail = 'choosing cover art..';
+				let found = false; // check for these names, highest to lowest priority
+				["folder.png", "cover.png", "folder.jpg", "cover.jpg"].forEach(function(n) {
+					if (n in imageFiles) {
+						form.coverPath = imageFiles[n];
+						found = true;
+					}
 				});
-				form.coverPath = covers[Math.max(...Object.keys(covers))];
+
+				// i could definitely optimize this section what with the recalculating of image sizes 3 times 
+				// in a row BUT this is the easiest way for me to conceptualize this and i just want it to work
+				if (!found) { // largest image that has "cover" in its name
+					let withCover = {};
+					let dim;
+					Object.keys(imageFiles).forEach(function(key) {
+						if (key.toLowerCase().includes("cover")) {
+							dim = sizeOf(imageFiles[key]);
+							withCover[dim.width*dim.height] = imageFiles[key];
+						}
+					});
+					if (withCover) {
+						form.coverPath = withCover[Math.max(...Object.keys(withCover))];
+						found = true;
+					} 
+				}
+
+				if (!found) { // largest image that has "art" in its name
+					let withArt = {};
+					let dim;
+					Object.keys(imageFiles).forEach(function(key) {
+						if (key.toLowerCase().includes("art")) {
+							dim = sizeOf(imageFiles[key]);
+							withCover[dim.width*dim.height] = imageFiles[key];
+						}
+					});
+					if (withArt) {
+						form.coverPath = withArt[Math.max(...Object.keys(withArt))];
+						found = true;
+					}
+				}
+
+				if (!found) { // largest image in directory
+					let covers = {};
+					let dim;
+					Object.keys(imageFiles).forEach(function(key) {
+						dim = sizeOf(imageFiles[key]);
+						covers[dim.width*dim.height] = imageFiles[key];
+					});
+					form.coverPath = covers[Math.max(...Object.keys(covers))];
+				}
 			}
 		}
 	}
-	// return object with relevant tags + location of cover art
+	
+	return { // return object with relevant tags + location of cover art
+		form: form,
+		audioFiles: audioFiles
+	}
 };

@@ -87,7 +87,11 @@ for (const key in form) {
 submitBtn.addEventListener('click', function() {
 	let formData = {};
 	for (const key in form) {
-		formData[key] = form[key].value;
+		if (form[key].type == "checkbox") {
+			formData[key] = form[key].checked;
+		} else {
+			formData[key] = form[key].value;
+		}
 	}
 	ipcRenderer.send("make-video", formData);
 });
