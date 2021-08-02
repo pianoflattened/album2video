@@ -18,6 +18,8 @@
     "@ffprobe-installer/ffprobe": "^1.1.0",
     "@npcz/magic": "^1.3.11",
     "electron-progressbar": "^2.0.1",
-    "fluent-ffmpeg": "^2.1.2"
+    "fluent-ffmpeg": "^2.1.2",
+    "image-size": "^1.0.0",
+    "mime-types": "^2.1.32"
   }
 }
