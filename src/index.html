@@ -25,7 +25,13 @@
 			<label for="output-path">output path</label>
 			<input type="text" id="output-path"> <button id="browse-output" browsetype="path">browse</button>
 		</div>
-		<div id="submit-div"><button disabled id="submit">make video</button></div>
+		<div id="finish">
+			<span id="progress-label">&nbsp;</span>
+			<div id="submit-div">
+				<progress id="progress" value=0 maxValue=100></progress>
+				<button disabled id="submit">make video</button>
+			</div>
+		</div>
 		<script src="./index.js"></script>
 	</body>
 </html>

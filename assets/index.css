@@ -40,6 +40,29 @@ input, button, textarea {
 }
 
 #submit-div {
-	text-align: right;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+}
+
+#submit-div progress {
+	flex-grow: 4;
+	margin-right: 8px;
+	vertical-align: middle;
+	display: inline-block;
+	opacity: 1;
+}
+
+#submit-div button {
+	order: 1;
+}
+
+span#progress-label {
+	font-size: 10px;
+}
+
+div#finish {
 	margin-top: 0.5rem;
+	line-height: 0.5rem;
 }
