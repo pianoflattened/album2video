@@ -38,9 +38,8 @@ Object.defineProperty(p, Symbol.iterator, {
 // heres the asinine boilerplate i had to write to use filemagic and get the audio/mp3 string or
 // whatever maybe make ur library usable and u wont send any more immature 19yr olds into a burning
 // fury and get thusly chewed out in some dark corner of their github code thanks
-FileMagic.magicFile = path.normalize(
-	path.join(__dirname, 'node_modules', '@npcz', 'magic', 'dist', 'magic.mgc')
-);
+
+
 
 // like he says "oh it's good practice to do this it's good practice to make sure you set 
 // MAGIC_PRESERVE_ATIME on linux-based platforms" yet not only he doesn't make this a default
@@ -50,9 +49,14 @@ FileMagic.magicFile = path.normalize(
 // file's detected mimetype and instead i have to dedicate all this time to figuring out how to get
 // like 12 goddamn characters into memory so i can know what the hell guys r using my code on and
 // adjust behavior accordingly like !!!!!!!!!!!
-if (process.platform === 'darwin' || process.platform === 'linux') { 
-	FileMagic.defaulFlags = MagicFlags.MAGIC_PRESERVE_ATIME; // default* lol
-}
+
+
+
+// AND THEN I TEST TH SHIT AND IT GIVES ME AN AMBIGUOUS "FAILED TO INITIALIZE" ERROR WHAT AM I
+// SUPPOSED TO DO W THIS SHIT IM JUST GOING TO CHECK FILE EXTENSIONS MAYBE SOMEWHERE ALONG THE LINE
+// ILL PACKAGE THIS WITH SOME BLACK BOX BINARY EXECUTABLE THAT JUST DOES IT PROBABLY BASED ON
+// GOLANG OR PYTHON OR LITERALLY ANYTHING BUT PREFERRABLY SOMETHING FAST IDK ANYWAY THATS WHAT
+// WE'RE DOING NOW :D
 
 module.exports = function getTags (form) {
 	// indeterminate progress bar
@@ -80,10 +84,17 @@ module.exports = function getTags (form) {
 	// loop through form.albumDirectory
 	progressBar.detail = 'reading ' + form.albumDirectory;
 	const albumDir = fs.opendirSync(form.albumDirectory);
-	for (const f of albumDir) {
-		fullpath = path.join(form.albumDirectory, f.name);
-		
-	}
+	FileMagic.getInstance().then((magic) => { // https://files.catbox.moe/law8p4.png
+		for (const f of albumDir) {
+			fullpath = path.join(form.albumDirectory, f.name);
+			let file_mimetype = magic.detect(file, magic.flags | MagicFlags.MAGIC_MIME_TYPE);
+			console.log(file_mimetype);
+		}
+		FileMagic.close();
+	}).catch((err) => {
+		console.log(err);
+		FileMagic.close();
+	});
 
 		// if mimetype is audio/* then get its tags + store in dictionary with path as a key
 		// if mimetype is image/* and form.detectCover is on then add it to the list of cover art candidates
