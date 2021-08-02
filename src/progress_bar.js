@@ -1,19 +1,37 @@
-const ElectronProgressBar = require('electron-progressbar');
-
-class ProgressBar extends ElectronProgressBar {
-	constructor(options, electronApp) {
-		super(options, electronApp);
+module.exports = class ProgressBar {
+	constructor(DOMelement) {
+		this._DOMelement = DOMelement;
+		this._bar = DOMelement.querySelector(".progress-bar");
+		this._label = DOMelement.querySelector("#progress-label");
 	}
 	
-	error(text) {
-		this.text = "ERROR";
-		this.detail = text;
-		this._realValue = this._options.maxValue;
-		this._updateTaskbarProgress();
-		if (this._options.indeterminate) {
-			this._options.style.bar.background = this._options.style.value.background;
+	setProgress(progress) {
+		this._bar.setAttribute("aria-valuenow", progress.toString());
+	}
+	
+	setLabel(text) {
+		this._label.textContent = text;
+	}
+	
+	makeDeterminate() {
+		this._bar.setAttribute("aria-valuenow", "0");
+		this._bar.setAttribute("aria-valuemin", "0");
+		this._bar.setAttribute("aria-valuemax", "100");
+		this._bar.class = "progress-bar";
+	}
+	
+	makeIndeterminate() {
+		this._bar.setAttribute("aria-valuenow", "100");
+		this._bar.setAttribute("aria-valuemin", "0");
+		this._bar.setAttribute("aria-valuemax", "100");
+		this._bar.class = "progress-bar progress-bar-striped progress-bar-animated";
+	}
+	
+	setComplete() {
+		this._bar.setAttribute("aria-valuenow", "100");
+		if (this._bar.classList.contains("progress-bar-animated")) {
+			this._bar.classList.remove("progress-bar-animated");
 		}
+		this.setLabel("done!");
 	}
 }
-
-module.exports = ProgressBar;

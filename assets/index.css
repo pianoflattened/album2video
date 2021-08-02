@@ -54,6 +54,8 @@ input, textarea, button {
 	flex-direction: row;
 	align-items: center;
 	justify-content: center;
+	margin-top: 0.5rem;
+	line-height: 0.5rem;
 }
 
 #submit-div .progress-container {
@@ -73,11 +75,6 @@ input, textarea, button {
 span#progress-label {
 	font-size: 10px;
 	margin-bottom: 8px;
-}
-
-div#finish {
-	margin-top: 0.5rem;
-	line-height: 0.5rem;
 }
 
 hr {
