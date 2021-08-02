@@ -1,5 +1,6 @@
-const { ipcRenderer } = require("electron");
+const { app, ipcRenderer } = require("electron");
 
+var progressBar;
 const form = {
 	albumDirectory: document.getElementById("album-dir"),
 	coverPath: document.getElementById("cover-path"),
@@ -93,5 +94,10 @@ submitBtn.addEventListener('click', function() {
 			formData[key] = form[key].value;
 		}
 	}
-	ipcRenderer.send("make-video", formData);
+	
+	ipcRenderer.send('make-video', formData);
+});
+
+ipcRenderer.on('set-progress-bar', function (event, detail) {
+	progressBar.detail = detail;
 });

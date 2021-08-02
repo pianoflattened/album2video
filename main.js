@@ -2,6 +2,9 @@
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
 const getTags = require('./src/get_tags.js');
 const path = require('path');
+const ProgressBar = require('./src/progress_bar.js');
+const serialize = require('serialize-javascript');
+var progressBar;
 
 function createWindow () {  
 	const win = new BrowserWindow({
@@ -82,6 +85,11 @@ ipcMain.on("browse-output-directory", function(event) {
 });
 
 ipcMain.on("make-video", function(event, args) {
+	progressBar = new ProgressBar({
+		title: 'album2video', 
+		text: 'collecting files', 
+		detail: 'validating album path..'
+	}, app);
 	console.log(args);
-	console.log(getTags(args));
+	console.log(getTags(args, progressBar));
 });

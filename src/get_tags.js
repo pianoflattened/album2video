@@ -1,6 +1,5 @@
 const ffprobePath = require('@ffprobe-installer/ffprobe').path;
 const { ffprobeSync } = require('kiss-ffmpeg');
-const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
 const mime = require('mime-types');
 const path = require('path');
@@ -34,13 +33,13 @@ function overallTrackNumber(track, disc, discTracks) {
 	return n;
 }
 
-module.exports = function getTags (form) {
+module.exports = function getTags(form, progressBar) {
 	// indeterminate progress bar
-	let progressBar = new ProgressBar({
+	/* let progressBar = new ProgressBar({
 		title: 'album2video',
 		text: 'collecting files',
 		detail: 'validating album path..'
-	});
+	});*/
 	
 	console.log(form.albumDirectory);
 
@@ -123,7 +122,7 @@ module.exports = function getTags (form) {
 			audioFiles.sort(function(a, b) {
 				aOverall = overallTrackNumber(a.track, a.disc, discTracks);
 				bOverall = overallTrackNumber(b.track, b.disc, discTracks);
-				return aOverall - bOverall;
+				return Math.sign(aOverall - bOverall);
 			});
 
 			progressBar.detail = 'checking cover art..';
