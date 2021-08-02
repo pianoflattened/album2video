@@ -42,8 +42,16 @@ FileMagic.magicFile = path.normalize(
 	path.join(__dirname, 'node_modules', '@npcz', 'magic', 'dist', 'magic.mgc')
 );
 
-if (process.platform === 'darwin' || process.platform === 'linux') {
-	FileMagic.defaulFlags = MagicFlags.MAGIC_PRESERVE_ATIME;
+// like he says "oh it's good practice to do this it's good practice to make sure you set 
+// MAGIC_PRESERVE_ATIME on linux-based platforms" yet not only he doesn't make this a default
+// feature DUDE MAKES HIS EXAMPLES FUCKING INDECIPHERABLE im so frustrated i spent 6 hours of my
+// day figuring out how to make this work because dude wouldn't spell out exactly how this worked
+// this shit should be as minimal as possible i should be importing one function that spits out a
+// file's detected mimetype and instead i have to dedicate all this time to figuring out how to get
+// like 12 goddamn characters into memory so i can know what the hell guys r using my code on and
+// adjust behavior accordingly like !!!!!!!!!!!
+if (process.platform === 'darwin' || process.platform === 'linux') { 
+	FileMagic.defaulFlags = MagicFlags.MAGIC_PRESERVE_ATIME; // default* lol
 }
 
 module.exports = function getTags (form) {
