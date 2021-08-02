@@ -19,6 +19,7 @@ browseAlbumBtn.addEventListener('click', function() {
 });
 ipcRenderer.on("browse-album-successful", function(event, filePath) {
 	form.albumDirectory.value = filePath;
+	updateSubmitBtn(form);
 });
 
 const browseCoverBtn = document.getElementById('browse-cover');
@@ -27,6 +28,7 @@ browseCoverBtn.addEventListener('click', function() {
 });
 ipcRenderer.on("browse-cover-successful", function(event, filePath) {
 	form.coverPath.value = filePath;
+	updateSubmitBtn(form);
 });
 
 const browseOutputBtn = document.getElementById('browse-output');
@@ -40,6 +42,7 @@ browseOutputBtn.addEventListener('click', function() {
 });
 ipcRenderer.on("browse-output-successful", function(event, filePath) {
 	document.getElementById("output-path").value = filePath;
+	updateSubmitBtn(form);
 });
 
 

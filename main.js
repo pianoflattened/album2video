@@ -1,7 +1,8 @@
 // TODO: set or remove app icon
-
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
+const getTags = require('./src/get_tags.js');
 const path = require('path');
+
 function createWindow () {  
 	const win = new BrowserWindow({
 		useContentSize: true,
@@ -82,8 +83,5 @@ ipcMain.on("browse-output-directory", function(event) {
 
 ipcMain.on("make-video", function(event, args) {
 	console.log(args);
-});
-
-ipcMain.on("error-get-tags", function(event, args) {
-	console.log(args); // make popup windows for this
+	console.log(getTags(args));
 });
