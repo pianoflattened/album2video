@@ -35,7 +35,7 @@ function overallTrackNumber(track, disc, discTracks) {
 module.exports = async function getTags(form, progressBar) {
 	// indeterminate progress bar
 	await progressBar.makeIndeterminate();
-	await progressBar.setLabel('collecting files - validating album path..')
+	await progressBar.setLabel('validating album path..')
 
 	let stats;
 	try { // check if form.albumDirectory exists + is a directory
@@ -52,7 +52,7 @@ module.exports = async function getTags(form, progressBar) {
 	}
 
 	// loop through form.albumDirectory
-	await progressBar.setLabel('collecting files - reading ' + form.albumDirectory + '..');
+	await progressBar.setLabel('reading ' + form.albumDirectory + '..');
 	const albumDir = fs.opendirSync(form.albumDirectory);
 	var audioFiles = [];
 	let imageFiles = {};
@@ -65,7 +65,7 @@ module.exports = async function getTags(form, progressBar) {
 	for await (const f of albumDir) { // need to somehow ".then()" this for loop :(
 		if (f.name != "concat.wav") {
 			fullpath = path.join(form.albumDirectory, f.name);
-			await progressBar.setLabel('collecting files - reading ' + fullpath + '..');
+			await progressBar.setLabel('reading ' + fullpath + '..');
 
 			fileMimetype = mime.lookup(fullpath);
 			switch (fileMimetype.split("/")[0]) {
@@ -106,13 +106,13 @@ module.exports = async function getTags(form, progressBar) {
 		}
 	}
 
-	await progressBar.setLabel('collecting files - checking if ' + form.albumDirectory + 'has no sound files..');
+	await progressBar.setLabel('checking if ' + form.albumDirectory + 'has no sound files..');
 	if (!audioFiles) { // if form.albumDirectory has no sound files return an error
 		await progressBar.error(form.albumDirectory + ' does not contain any sound files');
 		return false;
 	}
     
-    await progressBar.setLabel('collecting files - ordering audio files..');
+    await progressBar.setLabel('ordering audio files..');
     Promise.all(promises).then(function() {
         console.log("VERIFY THAT THERE ARE " + promises.length + " TRACKS IN THE ALBUM");
         console.log(discTracks);
@@ -129,7 +129,7 @@ module.exports = async function getTags(form, progressBar) {
 	    });
     });
 
-	await progressBar.setLabel('collecting files - checking cover art..');
+	await progressBar.setLabel('checking cover art..');
 	// if form.detectCover is on + no image files set the cover to a 1920 x 1080 all black image
 	if (!imageFiles && form.detectCover) { 
 		form.coverPath = '../assets/black.png'
@@ -148,7 +148,7 @@ module.exports = async function getTags(form, progressBar) {
 			return false;
 		}
 	} else {
-		await progressBar.setLabel('collecting files - choosing cover art..');
+		await progressBar.setLabel('choosing cover art..');
 		let found = false; // check for these names, highest to lowest priority
 		["folder.png", "cover.png", "folder.jpg", "cover.jpg"].forEach(function(n) {
 			if (n in imageFiles) {

@@ -1,14 +1,8 @@
 const { app, ipcRenderer } = require("electron");
 const getTags = require('./get_tags.js');
+const makeVideo = require('./make_video.js');
 const ProgressBar = require('./progress_bar.js');
-
-function overallTrackNumber(track, disc, discTracks) {
-	let n = track;
-	for (let i = 1; i <= disc-1; i++) {
-		n += discTracks[i];
-	}
-	return n;
-}
+const sleep = require('./sleep.js'); 
 
 var progressBar;
 const form = {
@@ -95,7 +89,7 @@ for (const key in form) {
 }
 
 submitBtn.addEventListener('click', function() {
-    submitBtn.disabled = true;
+    submitBtn.setAttribute("disabled","");
 	let formData = {};
 	for (const key in form) {
 		if (form[key].type == "checkbox") {
@@ -108,6 +102,6 @@ submitBtn.addEventListener('click', function() {
 	let progressBar = new ProgressBar(document.querySelector(".progress-container"));
 	getTags(formData, progressBar).then(function(data) {
         console.log(JSON.stringify(data.audioFiles));
-    });
-    submitBtn.disabled = false;
+        
+    }).then(() => submitBtn.removeAttribute("disabled"));
 });
