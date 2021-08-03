@@ -2,17 +2,25 @@ const { app, ipcRenderer } = require("electron");
 const getTags = require('./get_tags.js');
 const ProgressBar = require('./progress_bar.js');
 
+function overallTrackNumber(track, disc, discTracks) {
+	let n = track;
+	for (let i = 1; i <= disc-1; i++) {
+		n += discTracks[i];
+	}
+	return n;
+}
+
 var progressBar;
 const form = {
 	albumDirectory: document.getElementById("album-dir"),
 	coverPath: document.getElementById("cover-path"),
-	detectCover: document.getElementById("detect-cover"),
+	/*detectCover: document.getElementById("detect-cover"),*/
 	separateVideos: document.getElementById("separate-videos"),
 	outputPath: document.getElementById("output-path")
 }
 const submitBtn = document.getElementById('submit');
 function updateSubmitBtn(f) {
-	submitBtn.disabled = !(f.albumDirectory.value && (f.coverPath.value || f.detectCover.checked) && f.outputPath.value);
+	submitBtn.disabled = !(f.albumDirectory.value && (f.coverPath.value /*|| f.detectCover.checked*/) && f.outputPath.value);
 }
 
 // file browse events
@@ -49,7 +57,7 @@ ipcRenderer.on("browse-output-successful", function(event, filePath) {
 });
 
 
-form.detectCover.addEventListener('change', function() {
+/*form.detectCover.addEventListener('change', function() {
 	if (this.checked) {
 		console.log("checked");
 		form.coverPath.setAttribute("disabled", "");
@@ -57,7 +65,7 @@ form.detectCover.addEventListener('change', function() {
 		console.log("unchecked");
 		form.coverPath.removeAttribute("disabled");
 	}
-});
+});*/
 
 let outdir ="";
 let outpath = "";
@@ -99,6 +107,17 @@ submitBtn.addEventListener('click', function() {
 	
 	let progressBar = new ProgressBar(document.querySelector(".progress-container"));
 	getTags(formData, progressBar).then(function(data) {
+        /* data.audioFiles.sort(function(a, b) {
+		    aOverall = overallTrackNumber(a.track, a.disc || 1, data.discTracks);
+		    bOverall = overallTrackNumber(b.track, b.disc || 1, data.discTracks);
+            console.log(a.track, b.track);
+            console.log(a.disc, b.disc);
+            console.log(aOverall, bOverall);
+            console.log("---------");
+            if (aOverall > bOverall) return 1;
+            if (aOverall < bOverall) return -1;
+            if (aOverall == bOverall) return 0;
+	    }); */
         console.log(JSON.stringify(data.audioFiles));
     });
     this.disabled = false;

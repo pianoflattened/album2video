@@ -4,7 +4,6 @@ const fs = require('fs');
 const mime = require('mime-types');
 const path = require('path');
 var sizeOf = require('image-size');
-const sleep = require('./sleep.js');
 
 ffprobe.command = ffprobePath;
 
@@ -28,7 +27,7 @@ Object.defineProperty(p, Symbol.iterator, {
 function overallTrackNumber(track, disc, discTracks) {
 	let n = track;
 	for (let i = 1; i <= disc-1; i++) {
-		n += discTracks[i+1];
+		n += discTracks[i];
 	}
 	return n;
 }
@@ -62,6 +61,7 @@ module.exports = async function getTags(form, progressBar) {
 	let track;
 	let fileMimetype;
 	let metadata;
+    let promises = [];
 	for await (const f of albumDir) { // need to somehow ".then()" this for loop :(
 		if (f.name != "concat.wav") {
 			fullpath = path.join(form.albumDirectory, f.name);
@@ -69,8 +69,8 @@ module.exports = async function getTags(form, progressBar) {
 
 			fileMimetype = mime.lookup(fullpath);
 			switch (fileMimetype.split("/")[0]) {
-				case "audio": // if mimetype is audio/* then gffet its tags + store in dictionary with path as key
-                    ffprobe(fullpath).then(function(info) {
+				case "audio": // if mimetype is audio/* then get its tags + store in dictionary with path as key
+                    promises.push(ffprobe(fullpath).then(function(info) {
                         metadata = info.format;
                         if (metadata.tags.disc) {
 						    disc = parseInt(metadata.tags.disc.split("/")[0]);
@@ -95,7 +95,7 @@ module.exports = async function getTags(form, progressBar) {
                     }).catch(function(err) {
                         console.log(err);
                         (async () => {await progressBar.error(err.toString())})();
-                    });
+                    }));
 					break;
 				case "image": // if mimetype is image/* and form.detectCover add it to cover art candidates list
 					if (form.detectCover) imageFiles[f.name] = fullpath;
@@ -112,19 +112,22 @@ module.exports = async function getTags(form, progressBar) {
 		return false;
 	}
     
-	await progressBar.setLabel('collecting files - ordering audio files..');
-    console.log(discTracks);
-	audioFiles.sort(function(a, b) {
-		aOverall = overallTrackNumber(a.track, a.disc || 1, discTracks);
-		bOverall = overallTrackNumber(b.track, b.disc || 1, discTracks);
-        console.log(a.track, b.track);
-        console.log(a.disc, b.disc);
-        console.log(aOverall, bOverall);
-        console.log("---------");
-        if (aOverall > bOverall) return 1;
-        if (aOverall < bOverall) return -1;
-        if (aOverall == bOverall) return 0;
-	});
+    await progressBar.setLabel('collecting files - ordering audio files..');
+    Promise.all(promises).then(function() {
+        console.log("VERIFY THAT THERE ARE " + promises.length + " TRACKS IN THE ALBUM");
+        console.log(discTracks);
+	    audioFiles.sort(function(a, b) {
+		    aOverall = overallTrackNumber(a.track, a.disc || 1, discTracks);
+		    bOverall = overallTrackNumber(b.track, b.disc || 1, discTracks);
+            // console.log(a.track, b.track);
+            // console.log(a.disc, b.disc);
+            // console.log(aOverall, bOverall);
+            // console.log("---------");
+            if (aOverall > bOverall) return 1;
+            if (aOverall < bOverall) return -1;
+            if (aOverall == bOverall) return 0;
+	    });
+    });
 
 	await progressBar.setLabel('collecting files - checking cover art..');
 	// if form.detectCover is on + no image files set the cover to a 1920 x 1080 all black image
@@ -201,6 +204,7 @@ module.exports = async function getTags(form, progressBar) {
 	return { // return object with relevant tags + location of cover art
 		form: form,
 		audioFiles: audioFiles,
-        progressBar: progressBar
+        progressBar: progressBar,
+        discTracks: discTracks
 	}
 };
