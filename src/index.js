@@ -101,7 +101,6 @@ submitBtn.addEventListener('click', function() {
 	
 	let progressBar = new ProgressBar(document.querySelector(".progress-container"));
 	getTags(formData, progressBar).then(function(data) {
-        console.log(JSON.stringify(data.audioFiles));
-        
+        makeVideo(data);
     }).then(() => submitBtn.removeAttribute("disabled"));
 });

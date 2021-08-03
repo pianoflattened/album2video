@@ -7,6 +7,12 @@ var sizeOf = require('image-size');
 
 ffprobe.command = ffprobePath;
 
+function sleepSync(ms) {
+    let start = new Date().getTime(), expire = start + ms;
+    while (new Date().getTime() < expire) { }
+    return;
+}
+
 /*// makes directories synchronously iterable. thankz stack over flow :D
 const p = fs.Dir.prototype;
 if (p.hasOwnProperty(Symbol.iterator)) { return; }
@@ -68,6 +74,7 @@ module.exports = async function getTags(form, progressBar) {
 			await progressBar.setLabel('reading ' + fullpath + '..');
 
 			fileMimetype = mime.lookup(fullpath);
+            console.log(fullpath);
 			switch (fileMimetype.split("/")[0]) {
 				case "audio": // if mimetype is audio/* then get its tags + store in dictionary with path as key
                     promises.push(ffprobe(fullpath).then(function(info) {
@@ -113,7 +120,23 @@ module.exports = async function getTags(form, progressBar) {
 	}
     
     await progressBar.setLabel('ordering audio files..');
-    Promise.all(promises).then(function() {
+    Promise.all(promises).then(function() { // FURIOUS that i have to put this stupid while loop in here
+        let limit = 300;
+        let c = 0;
+        while (promises.length != audioFiles.length) {
+            sleepSync(16);
+            console.log("slept");
+            c += 1;
+            if (c >= limit) {
+                console.log("broken");
+                break;
+            }
+        }
+        return c < limit;
+    }).then(function(ok) {
+        if (!ok) {
+            Promise.reject('audio files miscounted');
+        }
         console.log("VERIFY THAT THERE ARE " + promises.length + " TRACKS IN THE ALBUM");
         console.log(discTracks);
 	    audioFiles.sort(function(a, b) {
