@@ -72,9 +72,14 @@ input, textarea, button {
 	order: 1;
 }
 
-span#progress-label {
+div#progress-label {
 	font-size: 10px;
 	margin-bottom: 8px;
+	overflow-x: clip;
+	overflow-y: visible;
+	text-overflow: ellipsis;
+    max-width: 251.14px;
+    white-space: nowrap;
 }
 
 hr {

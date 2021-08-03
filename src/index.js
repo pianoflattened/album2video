@@ -97,5 +97,5 @@ submitBtn.addEventListener('click', function() {
 	}
 	
 	let progressBar = new ProgressBar(document.querySelector(".progress-container"));
-	console.log(getTags(formData, progressBar));
+	(async () => {getTags(formData, progressBar)})();
 });

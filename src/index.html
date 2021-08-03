@@ -3,8 +3,8 @@
 	<head>
 		<meta charset="UTF-8">    
 		<!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->    
-		<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
-		<meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'">
+		<!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'"> -->
+		<!-- <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'"> -->
 		<link rel="stylesheet" href="../assets/bootstrap/bootstrap.min.css">
 		<script src="../assets/bootstrap/bootstrap.min.js"></script>
 		<link rel="stylesheet" href="../assets/index.css">
@@ -48,7 +48,7 @@
 		
 		<div id="submit-div">
 			<div class="progress-container">
-				<span id="progress-label">loading..&nbsp;</span>
+				<div id="progress-label">&nbsp;</div>
 				<div class="progress">
 					<div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
 				</div>

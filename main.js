@@ -38,7 +38,10 @@ ipcMain.on("auto-resize", function(event, width, height) {
 });
 
 ipcMain.on("browse-album", function(event) {
-	dialog.showOpenDialog({properties: ['openDirectory', 'showHiddenFiles']}).then(result => {
+	dialog.showOpenDialog({
+        properties: ['openDirectory', 'showHiddenFiles'], 
+        title: 'choose album directory'
+    }).then(result => {
 		if (!result.canceled) {
 			event.reply("browse-album-successful", result.filePaths[0]);
 			
@@ -50,7 +53,10 @@ ipcMain.on("browse-album", function(event) {
 });
 
 ipcMain.on("browse-cover", function(event) {
-	dialog.showOpenDialog({properties: ['openFile', 'showHiddenFiles']}).then(result => {
+	dialog.showOpenDialog({
+        properties: ['openFile', 'showHiddenFiles'],
+        title: 'choose cover path'
+    }).then(result => {
 		if (!result.canceled) {
 			event.reply("browse-cover-successful", result.filePaths[0]);
 			console.log("cover filePaths: " + result.filePaths);
@@ -61,7 +67,10 @@ ipcMain.on("browse-cover", function(event) {
 });
 
 ipcMain.on("browse-output-path", function(event) {
-	dialog.showOpenDialog({properties: ['openFile', 'showHiddenFiles']}).then(result => {
+	dialog.showOpenDialog({
+        properties: ['openFile', 'showHiddenFiles'],
+        title: 'choose output path'
+    }).then(result => {
 		if (!result.canceled) {
 			event.reply("browse-output-successful", result.filePaths[0]);
 			console.log("output filePaths: " + result.filePaths);
@@ -72,7 +81,10 @@ ipcMain.on("browse-output-path", function(event) {
 });
 
 ipcMain.on("browse-output-directory", function(event) {
-	dialog.showOpenDialog({properties: ['openDirectory', 'showHiddenFiles']}).then(result => {
+	dialog.showOpenDialog({
+        properties: ['openDirectory', 'showHiddenFiles'],
+        title: 'choose output directory'
+    }).then(result => {
 		if (!result.canceled) {
 			event.reply("browse-output-successful", result.filePaths[0]);
 			console.log("output filePaths: " + result.filePaths);
