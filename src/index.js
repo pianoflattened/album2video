@@ -95,7 +95,7 @@ for (const key in form) {
 }
 
 submitBtn.addEventListener('click', function() {
-    this.disabled = true;
+    submitBtn.disabled = true;
 	let formData = {};
 	for (const key in form) {
 		if (form[key].type == "checkbox") {
@@ -107,18 +107,7 @@ submitBtn.addEventListener('click', function() {
 	
 	let progressBar = new ProgressBar(document.querySelector(".progress-container"));
 	getTags(formData, progressBar).then(function(data) {
-        /* data.audioFiles.sort(function(a, b) {
-		    aOverall = overallTrackNumber(a.track, a.disc || 1, data.discTracks);
-		    bOverall = overallTrackNumber(b.track, b.disc || 1, data.discTracks);
-            console.log(a.track, b.track);
-            console.log(a.disc, b.disc);
-            console.log(aOverall, bOverall);
-            console.log("---------");
-            if (aOverall > bOverall) return 1;
-            if (aOverall < bOverall) return -1;
-            if (aOverall == bOverall) return 0;
-	    }); */
         console.log(JSON.stringify(data.audioFiles));
     });
-    this.disabled = false;
+    submitBtn.disabled = false;
 });
