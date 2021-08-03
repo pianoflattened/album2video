@@ -22,6 +22,7 @@
     "image-size": "^1.0.0",
     "kiss-ffmpeg": "^0.4.2",
     "mime-types": "^2.1.32",
-    "serialize-javascript": "^6.0.0"
+    "serialize-javascript": "^6.0.0",
+    "tmp": "^0.2.1"
   }
 }

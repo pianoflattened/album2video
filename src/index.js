@@ -61,6 +61,7 @@ ipcRenderer.on("browse-output-successful", function(event, filePath) {
 	}
 });*/
 
+let browsetype;
 let outdir ="";
 let outpath = "";
 form.separateVideos.addEventListener('change', function() {
@@ -101,6 +102,6 @@ submitBtn.addEventListener('click', function() {
 	
 	let progressBar = new ProgressBar(document.querySelector(".progress-container"));
 	getTags(formData, progressBar).then(function(data) {
-        makeVideo(data);
+        makeVideo(data, document.getElementById("timestamps"));
     }).then(() => submitBtn.removeAttribute("disabled"));
 });

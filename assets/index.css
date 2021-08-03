@@ -16,31 +16,8 @@ body.dark {
 	color: #e0e0e0;
 }
 
-input, button, textarea {
-	/* border-width: 1px;
-	border-radius: 3px; */
-}
-
 input, textarea, button {
 	font-size: 12px!important;
-}
-
-.dark input, .dark textarea, .dark button {
-	/* background-color: #000;
-	color: #e0e0e0; */
-}
-
-.light input, .light textarea, .light button {
-	/* background-color: #fff;
-	color: #000; */
-}
-
-.dark :disabled {
-	/* color: #434343; */
-}
-
-.light :disabled {
-	/* color: #b3b3b3; */
 }
 
 #timestamps {
@@ -90,7 +67,7 @@ hr {
 	margin-bottom: 0.5rem!important;
 }
 
-.dark .btn-secondary {
+/* .dark .btn-secondary {
 	background-color: #495057;
 	border-color: #434b51;
 }
@@ -103,4 +80,4 @@ hr {
 .dark input {
 	background-color: #e9ecef;
 	border-color: #e3e7e9
-}
+} */

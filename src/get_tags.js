@@ -90,7 +90,7 @@ module.exports = async function getTags(form, progressBar) {
 						    title: metadata.tags.title,
 						    track: track,
 						    disc: disc,
-						    length: parseFloat(metadata.duration) - parseFloat(metadata.start_time)
+						    time: parseFloat(metadata.duration) // - parseFloat(metadata.start_time)
 					    });
 					    if (discTracks[disc]) {
 						    if (discTracks[disc] < track) {
