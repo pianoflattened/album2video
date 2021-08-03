@@ -15,7 +15,7 @@ module.exports = class ProgressBar {
 	
 	async setLabel(text) {
 		this._label.textContent = text;
-        await sleep(16);
+        await sleep(100);
 	}
 	
 	async makeDeterminate() {
@@ -24,7 +24,7 @@ module.exports = class ProgressBar {
 		this._bar.setAttribute("aria-valuemax", "100");
 		this._bar.setAttribute("style", "width: 0%");
 		this._bar.class = "progress-bar";
-        await sleep(16);
+        await sleep(100);
 	}
 	
 	async makeIndeterminate() {
@@ -33,7 +33,7 @@ module.exports = class ProgressBar {
 		this._bar.setAttribute("aria-valuemax", "100");
 		this._bar.setAttribute("style", "width: 100%");
 		this._bar.setAttribute("class", "progress-bar progress-bar-striped progress-bar-animated");
-        await sleep(16);
+        await sleep(100);
 	}
 	
 	async setComplete() {
@@ -46,7 +46,7 @@ module.exports = class ProgressBar {
 			this._bar.classList.remove("progress-bar-striped");
 		}
 		this.setLabel("done!");
-        await sleep(16);
+        await sleep(100);
 	}
 	
 	async error(msg) {
@@ -56,6 +56,6 @@ module.exports = class ProgressBar {
 			this._bar.classList.remove("progress-bar-animated");
 		}
 		this.setLabel(msg);
-        await sleep(16);
+        await sleep(100);
 	}
 }
