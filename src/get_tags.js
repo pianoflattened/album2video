@@ -4,6 +4,7 @@ const fs = require('fs');
 const mime = require('mime-types');
 const path = require('path');
 var sizeOf = require('image-size');
+const sleep = require('./sleep.js');
 
 ffprobe.command = ffprobePath;
 
@@ -26,8 +27,8 @@ Object.defineProperty(p, Symbol.iterator, {
 
 function overallTrackNumber(track, disc, discTracks) {
 	let n = track;
-	for (let i = 0; i <= disc-2; i++) {
-		n += discTracks[i];
+	for (let i = 1; i <= disc-1; i++) {
+		n += discTracks[i+1];
 	}
 	return n;
 }
@@ -61,7 +62,7 @@ module.exports = async function getTags(form, progressBar) {
 	let track;
 	let fileMimetype;
 	let metadata;
-	for await (const f of albumDir) {
+	for await (const f of albumDir) { // need to somehow ".then()" this for loop :(
 		if (f.name != "concat.wav") {
 			fullpath = path.join(form.albumDirectory, f.name);
 			await progressBar.setLabel('collecting files - reading ' + fullpath + '..');
@@ -76,8 +77,7 @@ module.exports = async function getTags(form, progressBar) {
 					    } else { disc = 1; }
 					    track = parseInt(metadata.tags.track.split("/")[0]);
 					    audioFiles.push({
-						    filename: metadata.filename, 
-						    fullpath: fullpath,
+						    filename: metadata.filename,
 						    artist: metadata.tags.artist,
 						    albumArtist: metadata.tags.albumArtist || "",
 						    title: metadata.tags.title,
@@ -111,12 +111,19 @@ module.exports = async function getTags(form, progressBar) {
 		await progressBar.error(form.albumDirectory + ' does not contain any sound files');
 		return false;
 	}
-
+    
 	await progressBar.setLabel('collecting files - ordering audio files..');
+    console.log(discTracks);
 	audioFiles.sort(function(a, b) {
-		aOverall = overallTrackNumber(a.track, a.disc, discTracks);
-		bOverall = overallTrackNumber(b.track, b.disc, discTracks);
-		return Math.sign(aOverall - bOverall);
+		aOverall = overallTrackNumber(a.track, a.disc || 1, discTracks);
+		bOverall = overallTrackNumber(b.track, b.disc || 1, discTracks);
+        console.log(a.track, b.track);
+        console.log(a.disc, b.disc);
+        console.log(aOverall, bOverall);
+        console.log("---------");
+        if (aOverall > bOverall) return 1;
+        if (aOverall < bOverall) return -1;
+        if (aOverall == bOverall) return 0;
 	});
 
 	await progressBar.setLabel('collecting files - checking cover art..');
@@ -193,6 +200,7 @@ module.exports = async function getTags(form, progressBar) {
     await progressBar.setLabel('wait..');
 	return { // return object with relevant tags + location of cover art
 		form: form,
-		audioFiles: audioFiles
+		audioFiles: audioFiles,
+        progressBar: progressBar
 	}
 };

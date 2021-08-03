@@ -87,6 +87,7 @@ for (const key in form) {
 }
 
 submitBtn.addEventListener('click', function() {
+    this.disabled = true;
 	let formData = {};
 	for (const key in form) {
 		if (form[key].type == "checkbox") {
@@ -97,5 +98,8 @@ submitBtn.addEventListener('click', function() {
 	}
 	
 	let progressBar = new ProgressBar(document.querySelector(".progress-container"));
-	getTags(formData, progressBar);
+	getTags(formData, progressBar).then(function(data) {
+        console.log(JSON.stringify(data.audioFiles));
+    });
+    this.disabled = false;
 });
