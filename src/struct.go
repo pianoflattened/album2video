@@ -21,11 +21,11 @@ type AudioFile struct {
 }
 
 type FormData struct {
-    albumDirectory string `json:"albumDirectory"`
-    coverPath      string `json:"coverPath"`
-    detectCover    bool   `json:"detectCover"`
-    separateFiles  bool   `json:"separateFiles"`
-    outputPath     string `json:"outputPath"`
+    albumDirectory string
+    coverPath      string
+    detectCover    bool
+    separateFiles  bool
+    outputPath     string
 }
 
 type VideoData struct {

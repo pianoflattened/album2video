@@ -30,7 +30,8 @@ func main() {
             outputPath: os.Args[5],
         }
 
-        getTags(ipcIO, formData)
+        videoData := getTags(ipcIO, formData)
+        makeVideo(ipcIO, videoData)
     }()
 
     ipcIO.Start()
