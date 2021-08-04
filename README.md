@@ -9,7 +9,8 @@ this is pretty half-baked idk why anyone would want to know how as of right now 
 git clone https://github.com/sunglasseds/album2video.git album2video
 cd album2video
 mkdir bin
-go build -o ./bin/xX_FFMP3G_BL4CKB0X_Xx ./src/*.go # build the scary evil go binary that does all the work
+# build the scary evil go binary that does all the work
+go build -o ./bin/xX_FFMP3G_BL4CKB0X_Xx ./src/*.go
 npm install
 ```
 `npm start` 2 run
