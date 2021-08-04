@@ -1,4 +1,10 @@
-const sleep = require('./sleep.js'); 
+//const sleep = require('./sleep.js'); 
+
+function sleep(ms) {
+	return new Promise((resolve) => {
+		setTimeout(resolve, ms);
+	});
+}
 
 module.exports = class ProgressBar {
 	constructor(DOMelement) {

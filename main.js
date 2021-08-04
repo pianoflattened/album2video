@@ -1,8 +1,10 @@
 // TODO: set or remove app icon
+const IPC = require('ipc-node-go')
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
 const path = require('path');
 const serialize = require('serialize-javascript');
 var progressBar;
+const ipc = new IPC('./bin/xX_FFMP3G_BL4CKB0X_Xx')
 
 function createWindow () {  
 	const win = new BrowserWindow({
@@ -92,4 +94,20 @@ ipcMain.on("browse-output-directory", function(event) {
 	}).catch(err => {
 		console.log(err);
 	});
+});
+
+// ipc is so easy :D
+ipcMain.on("make-video", function(event, jsonData) {
+    let args = JSON.parse(jsonData);
+    ipc.init(args);
+
+    ipc.on("log", console.log);
+    ipc.on("error", console.error);
+    ipc.on("progress-label", data => {
+        event.reply("progress-label", data);
+    });
+
+    ipc.on('close', (code) => {
+        console.log("child process closed with " + code);
+    });
 });

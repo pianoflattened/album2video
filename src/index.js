@@ -1,14 +1,11 @@
 const { app, ipcRenderer } = require("electron");
-const getTags = require('./get_tags.js');
-const makeVideo = require('./make_video.js');
 const ProgressBar = require('./progress_bar.js');
-const sleep = require('./sleep.js'); 
 
 var progressBar;
 const form = {
 	albumDirectory: document.getElementById("album-dir"),
 	coverPath: document.getElementById("cover-path"),
-	/*detectCover: document.getElementById("detect-cover"),*/
+	detectCover: document.getElementById("detect-cover"),
 	separateVideos: document.getElementById("separate-videos"),
 	outputPath: document.getElementById("output-path")
 }
@@ -51,7 +48,7 @@ ipcRenderer.on("browse-output-successful", function(event, filePath) {
 });
 
 
-/*form.detectCover.addEventListener('change', function() {
+form.detectCover.addEventListener('change', function() {
 	if (this.checked) {
 		console.log("checked");
 		form.coverPath.setAttribute("disabled", "");
@@ -59,7 +56,7 @@ ipcRenderer.on("browse-output-successful", function(event, filePath) {
 		console.log("unchecked");
 		form.coverPath.removeAttribute("disabled");
 	}
-});*/
+});
 
 let browsetype;
 let outdir ="";
@@ -91,17 +88,20 @@ for (const key in form) {
 
 submitBtn.addEventListener('click', function() {
     submitBtn.setAttribute("disabled","");
-	let formData = {};
-	for (const key in form) {
-		if (form[key].type == "checkbox") {
-			formData[key] = form[key].checked;
-		} else {
-			formData[key] = form[key].value;
-		}
-	}
+	let formData = [
+        form.albumDirectory.value, 
+        form.coverPath.value,
+        form.detectCover.checked,
+        form.separateVideos.checked, 
+        form.outputPath.value
+    ];
 	
-	let progressBar = new ProgressBar(document.querySelector(".progress-container"));
-	getTags(formData, progressBar).then(function(data) {
-        makeVideo(data, document.getElementById("timestamps"));
-    }).then(() => submitBtn.removeAttribute("disabled"));
+	progressBar = new ProgressBar(document.querySelector(".progress-container"));
+    progressBar.makeIndeterminate();
+    progressBar.setLabel('starting subprocess..');
+    ipcRenderer.send("make-video", JSON.stringify(formData));
+});
+
+ipcRenderer.on("progress-label", function(event, msg) {
+    progressBar.setLabel(msg);
 });

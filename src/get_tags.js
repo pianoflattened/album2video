@@ -41,7 +41,7 @@ function overallTrackNumber(track, disc, discTracks) {
 module.exports = async function getTags(form, progressBar) {
 	// indeterminate progress bar
 	await progressBar.makeIndeterminate();
-	await progressBar.setLabel('validating album path..')
+	await progressBar.setLabel('validating album path..');
 
 	let stats;
 	try { // check if form.albumDirectory exists + is a directory
