@@ -8,10 +8,6 @@ import (
 
 var ipcIO *ipc.IPC
 
-type Who struct {
-    Name string `json:"name,omitempty"`
-}
-
 // i wrote out like three whole long ass comments about how much i hated this one github user for
 // making what i think was a mimetype detection library laughably unusable so i guess to counteract
 // some of that negative energy shout out to akumzy i love you so much dude you made a module for
@@ -32,10 +28,10 @@ func main() {
             ffmpegPath: os.Args[7],
         }
         ffprobePath := os.Args[6]
-        //ffmpegPath := os.Args[7]
+        ffmpegPath := os.Args[7]
 
         videoData := getTags(ipcIO, formData, ffprobePath)
-        makeVideo(ipcIO, videoData)
+        makeVideo(ipcIO, videoData, ffmpegPath, ffprobePath)
     }()
 
     ipcIO.Start()

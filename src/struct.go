@@ -7,27 +7,17 @@ import (
 )
 
 type AudioFile struct {
-    filename    string
-    artist      string
-    albumArtist string
-    album       string
-    title       string
-    year        string
-    track       uint64
-    disc        uint64
-    discTracks  *map[uint64]uint64
-    time        time.Duration
-    cover       *tag.Picture
+    filename, artist, albumArtist, album, title, year string
+	track, disc										  uint64
+    discTracks  									  *map[uint64]uint64
+    time        									  time.Duration
+    cover       									  *tag.Picture
 }
 
 type FormData struct {
-    albumDirectory string
-    coverPath      string
-    detectCover    bool
-    separateFiles  bool
-    outputPath     string
-    ffprobePath    string
-    ffmpegPath     string
+    albumDirectory, coverPath           string
+    detectCover, separateFiles          bool
+    outputPath, ffprobePath, ffmpegPath string
 }
 
 type VideoData struct {
@@ -35,4 +25,8 @@ type VideoData struct {
     audioFiles []AudioFile
     imageFiles []string
     discTracks map[uint64]uint64
+}
+
+type Timestamp struct {
+	artist, title, time string
 }
