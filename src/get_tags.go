@@ -26,7 +26,7 @@ func getTags(channel *ipc.IPC, formData FormData) VideoData {
         mime, err := mimetype.DetectFile(file); if err != nil { panic(err) }
 
         switch strings.Split(mime.String(), "/")[0] {
-        case "audio":
+        case "audio": // https://github.com/u2takey/ffmpeg-go#show-ffmpeg-progress
             ffprobeJSON, err := ffmpeg.Probe(file); if err != nil { panic(err) }
         }
     }
