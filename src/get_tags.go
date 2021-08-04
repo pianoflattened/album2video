@@ -5,10 +5,12 @@ import (
     "errors"
     "os"
     "path"
+    "regexp"    
     "strings"
 
     "github.com/Akumzy/ipc"
     "github.com/gabriel-vasile/mimetype"
+    "github.com/tidwall/gjson"
     "github.com/u2takey/ffmpeg-go"
 )
 
@@ -21,13 +23,41 @@ func getTags(channel *ipc.IPC, formData FormData) VideoData {
 
     files, err := albumDirectoryFile.Readdirnames(-1); if err != nil { panic(err) }
     
+    discTracks := make(map[int]int)
+    audioFiles := []AudioFile
+    imageFiles := []string
+
+    // wrote this myself :D i'll probably have to change it sometime
+    trackRe := regexp.MustCompile(`^([0-9]+|[A-Za-z]|[0-9]+[A-Za-z]|)(-| - |_| |)([0-9]+|[A-Za-z])(?=. | |_)`)
+
     for _, base := range files {
         file := path.Join(formData.albumDirectory, base)
         mime, err := mimetype.DetectFile(file); if err != nil { panic(err) }
 
         switch strings.Split(mime.String(), "/")[0] {
         case "audio": // https://github.com/u2takey/ffmpeg-go#show-ffmpeg-progress
+            var disc, track uint64
+            var artist, albumArtist, title string
             ffprobeJSON, err := ffmpeg.Probe(file); if err != nil { panic(err) }
+            
+            metadata := gjson.Get(ffprobeJSON, "format").Raw
+            missing := checkMissingMetadata(metadata)
+            for _, e := range missing {
+                if e == "filename" {
+                    filename = file
+                }
+            }
+
+            if gjson.get(metadata, "tags.disc").Exists() {
+                disc = parseTrack(metadata, "tags.disc")
+            } else { disc = 1 }
+            if gjson.get(metadata, "tags.track").Exists() {
+                track = parseTrack(metadata, "tags.track")
+            } else {
+                if !trackRe.MatchString(file) {
+                    panic(errors.New("please make sure your filenames start with a track number if they are not tagged properly (which would be preferrable). for exact specifications as to what does and does not get detected as a track number see https://github.com/sunglasseds/album2video"))
+                }
+            }
         }
     }
 
@@ -69,4 +99,23 @@ func validatePaths(channel *ipc.IPC, formData FormData) {
     } else {
         panic(errors.New(formData.outputPath + " is not a file or directory"))
     }
+}
+
+func checkMissingMetadata(metadata string) (missing []string) {
+    fields := []string{"tags.artist", "tags.albumArtist", "tags.title"}
+    for _, field := range fields {
+        if !gjson.Get(metadata, field).Exists() {
+            missing = append(missing, field)
+        }
+    }
+    return
+}
+
+func parseMetadata(metadata string) (audioFile AudioFile) {
+    
+}
+
+func parseTrack(m string, id string) (t uint) {
+    t, err = strconv.ParseUint(strings.Split(gjson.get(m, id).String(), "/")[0])
+    if err != nil { panic(err) }; return
 }

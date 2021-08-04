@@ -1,5 +1,17 @@
 package main
 
+import "time"
+
+type AudioFile struct {
+    filename    string
+    artist      string
+    albumArtist string
+    title       string
+    track       uint64
+    disc        uint64
+    time        time.Duration
+}
+
 type FormData struct {
     albumDirectory string `json:"albumDirectory"`
     coverPath      string `json:"coverPath"`
