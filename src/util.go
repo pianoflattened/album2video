@@ -1,11 +1,9 @@
 package main
 
 import (
-    "strconv"
-    "strings"
+    "fmt"
 
     "github.com/Akumzy/ipc"
-    "github.com/tidwall/gjson"
 )
 
 func contains(s []string, str string) bool {
@@ -21,6 +19,6 @@ func setLabel(ipc *ipc.IPC, msg string) {
     ipc.Send("progress-label", msg)
 }
 
-func Println(ipc *ipc.IPC, msg string) {
-    ipc.Send("log", msg)
+func Println(ipc *ipc.IPC, msg interface{}) {
+    ipc.Send("log", fmt.Sprintf("%v", msg))
 }

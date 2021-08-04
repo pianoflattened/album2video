@@ -1,67 +1,123 @@
 package main
 
 import (
-    "encoding/json"
     "errors"
     "os"
     "path"
-    "regexp"    
+    "regexp" 
+    "sort"
+    "strconv"   
     "strings"
+    "time"
 
     "github.com/Akumzy/ipc"
+    "github.com/dhowden/tag"
     "github.com/gabriel-vasile/mimetype"
     "github.com/tidwall/gjson"
-    "github.com/u2takey/ffmpeg-go"
+    ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
 func getTags(channel *ipc.IPC, formData FormData) VideoData {
     validatePaths(channel, formData)
 
-    setLabel(channel, "reading " + formData.albumDirectory + "..")
-
+    setLabel(channel, "reading " + path.Base(formData.albumDirectory) + "..")
     albumDirectoryFile, err := os.Open(formData.albumDirectory); if err != nil { panic(err) }
-
     files, err := albumDirectoryFile.Readdirnames(-1); if err != nil { panic(err) }
     
-    discTracks := make(map[int]int)
-    audioFiles := []AudioFile
-    imageFiles := []string
+    discTracks := make(map[uint64]uint64)
+    audioFiles := []AudioFile{}
+    imageFiles := []string{}
 
     // wrote this myself :D i'll probably have to change it sometime
-    trackRe := regexp.MustCompile(`^([0-9]+|[A-Za-z]|[0-9]+[A-Za-z]|)(-| - |_| |)([0-9]+|[A-Za-z])(?=. | |_)`)
+    trackRe := regexp.MustCompile(`^([0-9]+|[A-Za-z]{1,2}|[0-9]+[A-Za-z]|)(-| - |_| |)([0-9]+|[A-Za-z])(. | |_)`)
 
     for _, base := range files {
+        setLabel(channel, "reading " + base + "..")
         file := path.Join(formData.albumDirectory, base)
         mime, err := mimetype.DetectFile(file); if err != nil { panic(err) }
 
         switch strings.Split(mime.String(), "/")[0] {
-        case "audio": // https://github.com/u2takey/ffmpeg-go#show-ffmpeg-progress
+        case "audio":
             var disc, track uint64
-            var artist, albumArtist, title string
+            var artist, albumArtist, title, album string
             ffprobeJSON, err := ffmpeg.Probe(file); if err != nil { panic(err) }
+            metadata := getMetadata(file)
             
-            metadata := gjson.Get(ffprobeJSON, "format").Raw
-            missing := checkMissingMetadata(metadata)
-            for _, e := range missing {
-                if e == "filename" {
-                    filename = file
-                }
+            if artist = metadata.Artist(); artist == "" {
+                artist = "[unknown artist]"
+            }
+            
+            if albumArtist = metadata.AlbumArtist(); albumArtist == "" {
+                albumArtist = "[unknown artist]"
             }
 
-            if gjson.get(metadata, "tags.disc").Exists() {
-                disc = parseTrack(metadata, "tags.disc")
+            if title = metadata.Title(); title == "" {
+                title = "[untitled]"
+            }
+
+            if album = metadata.Album(); album == "" {
+                album = "[untitled]"
+            }
+
+            year    := strconv.Itoa(metadata.Year())
+            seconds := gjson.Get(ffprobeJSON, "format.duration").Float()
+            cover   := metadata.Picture()
+
+            // frankly i dont trust the tag library's assesment of track / disc numbers SORRY
+            if gjson.Get(ffprobeJSON, "format.tags.disc").Exists() {
+                disc = parseTrackTag(ffprobeJSON, "format.tags.disc")
             } else { disc = 1 }
-            if gjson.get(metadata, "tags.track").Exists() {
-                track = parseTrack(metadata, "tags.track")
+
+            if gjson.Get(ffprobeJSON, "format.tags.track").Exists() {
+                track = parseTrackTag(ffprobeJSON, "format.tags.track")
             } else {
                 if !trackRe.MatchString(file) {
-                    panic(errors.New("please make sure your filenames start with a track number if they are not tagged properly (which would be preferrable). for exact specifications as to what does and does not get detected as a track number see https://github.com/sunglasseds/album2video"))
+                    panic(errors.New("please make sure your filenames start with a track number" +
+                        "if they are not tagged properly (which would be preferrable). for exact" + 
+                        "specifications as to what does and does not get detected as a track" + 
+                        "number see https://github.com/sunglasseds/album2video"))
                 }
+                track, disc = parseTrack(file, trackRe)
             }
-        }
-    }
+            
+            if dt, ok := discTracks[disc]; ok {
+                if dt < track {
+                    discTracks[disc] = track                
+                }
+            } else {
+                discTracks[disc] = track
+            }
 
-    return VideoData{}
+            audioFiles = append(audioFiles, AudioFile{
+                filename: file,
+                artist: artist,
+                albumArtist: albumArtist,
+                title: title,
+                album: album,
+                year: year,
+                track: track,
+                disc: disc,
+                time: time.Duration(seconds * float64(time.Second)),
+                cover: cover,
+                discTracks: &discTracks,
+            })
+
+            case "image":
+                imageFiles = append(imageFiles, file)
+        }
+    }    
+
+    setLabel(channel, "ordering audio files..")
+    sort.Sort(byTrack(audioFiles))
+
+    Println(channel, audioFiles)
+
+    return VideoData{
+        formData: formData,
+        audioFiles: audioFiles,
+        imageFiles: imageFiles,
+        discTracks: discTracks,
+    }
 }
 
 func validatePaths(channel *ipc.IPC, formData FormData) {
@@ -70,9 +126,7 @@ func validatePaths(channel *ipc.IPC, formData FormData) {
 
     if stats.Mode().IsRegular() {
         formData.albumDirectory = path.Dir(formData.albumDirectory)
-    } else if stats.IsDir() {
-        // pass
-    } else {
+    } else if stats.IsDir() { /* pass */ } else {
         panic(errors.New("album directory is not a file or directory"))
     }
 
@@ -94,28 +148,74 @@ func validatePaths(channel *ipc.IPC, formData FormData) {
         formData.outputPath = path.Dir(formData.outputPath)
     } else if !formData.separateFiles && stats.IsDir() {
         formData.outputPath = path.Join(formData.outputPath, "out.mp4")
-    } else if formData.separateFiles == stats.IsDir() {
-        // pass
-    } else {
+    } else if formData.separateFiles == stats.IsDir() { /* pass */ } else {
         panic(errors.New(formData.outputPath + " is not a file or directory"))
     }
 }
 
-func checkMissingMetadata(metadata string) (missing []string) {
-    fields := []string{"tags.artist", "tags.albumArtist", "tags.title"}
-    for _, field := range fields {
-        if !gjson.Get(metadata, field).Exists() {
-            missing = append(missing, field)
+func getMetadata(filename string) (tag.Metadata) {
+    f, err := os.Open(filename); if err != nil { panic(err) }
+    m, err := tag.ReadFrom(f); if err != nil { panic(err) }
+    err = f.Close(); if err != nil { panic(err) }
+    return m
+}
+
+func parseTrackTag(m string, id string) (t uint64) {
+    t, err := strconv.ParseUint(strings.Split(gjson.Get(m, id).String(), "/")[0], 10, 64)
+    if err != nil { panic(err) }; return
+}
+
+func parseTrack(filename string, trackRe *regexp.Regexp) (d, t uint64) {
+    submatches := trackRe.FindSubmatch([]byte(filename))
+    discSubmatch := string(submatches[1])
+    trackSubmatch := string(submatches[3])
+    
+    d, err := strconv.ParseUint(discSubmatch, 10, 64)
+    if err != nil {
+        d = 1
+        switch len(discSubmatch) {
+        case 1:
+            d += uint64(strings.Index(strings.ToLower(string(discSubmatch[0])), "abcdefghijklmnopqrstuvwxyz"))
+            fallthrough
+        case 2:
+            d += uint64(strings.Index(strings.ToLower(string(discSubmatch[1])), "abcdefghijklmnopqrstuvwxyz")*26)
+        default:
+            panic(err)
         }
+    }
+
+    t, err = strconv.ParseUint(trackSubmatch, 10, 64)
+    if err != nil {
+        if len(trackSubmatch) != 1 {
+            panic(err)
+        }
+        t = uint64(strings.Index(strings.ToLower(string(trackSubmatch[0])), "abcdefghijklmnopqrstuvwxyz") + 1)
     }
     return
 }
 
-func parseMetadata(metadata string) (audioFile AudioFile) {
-    
+// le []AudioFile sorting interface
+type byTrack []AudioFile
+
+func (s byTrack) Len() int {
+    return len(s)
 }
 
-func parseTrack(m string, id string) (t uint) {
-    t, err = strconv.ParseUint(strings.Split(gjson.get(m, id).String(), "/")[0])
-    if err != nil { panic(err) }; return
+func (s byTrack) Swap(i, j int) {
+    s[i], s[j] = s[j], s[i]
+}
+
+func (s byTrack) Less(i, j int) bool {
+    discTracks := s[i].discTracks
+    iOverall := overallTrackNumber(s[i].track, s[i].disc, discTracks)
+    jOverall := overallTrackNumber(s[j].track, s[j].disc, discTracks)
+    return iOverall < jOverall
+}
+
+func overallTrackNumber(track, disc uint64, discTracks *map[uint64]uint64) (n uint64) {
+    n = track
+    for i := uint64(1); i <= disc-1; i++ {
+        n += (*discTracks)[i]
+    }
+    return n
 }

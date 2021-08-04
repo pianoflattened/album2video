@@ -1,15 +1,23 @@
 package main
 
-import "time"
+import (
+    "time"
+
+    "github.com/dhowden/tag"
+)
 
 type AudioFile struct {
     filename    string
     artist      string
     albumArtist string
+    album       string
     title       string
+    year        string
     track       uint64
     disc        uint64
+    discTracks  *map[uint64]uint64
     time        time.Duration
+    cover       *tag.Picture
 }
 
 type FormData struct {
@@ -20,7 +28,9 @@ type FormData struct {
     outputPath     string `json:"outputPath"`
 }
 
-// make sure u look up ffprobe test / example data so u can make the struct
-// unless u just wanna use gjson which is fine too considering how much effort that'll be
-
-type VideoData struct {}
+type VideoData struct {
+    formData   FormData
+    audioFiles []AudioFile
+    imageFiles []string
+    discTracks map[uint64]uint64
+}
