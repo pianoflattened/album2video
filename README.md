@@ -15,4 +15,4 @@ npm install
 ```
 `npm start` 2 run
 
-# SORRY FOR MAKING AN ELECTRON APP !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# SORRY FOR MAKING AN ELECTRON APP !!!!!!!!!!!
