@@ -9,8 +9,8 @@ const ipc = new IPC('./bin/xX_FFMP3G_BL4CKB0X_Xx')
 function createWindow () {  
 	const win = new BrowserWindow({
 		useContentSize: true,
-		width: 800,    
-		height: 600,
+		width: 366,    
+		height: 411,
 		webPreferences: {
 			preload: path.join(__dirname, "src/preload.js"),
 			nodeIntegration: true,

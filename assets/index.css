@@ -20,6 +20,24 @@ input, textarea, button {
 	font-size: 12px!important;
 }
 
+label {
+    display: block;
+}
+
+label.form-check-label {
+    line-height: 1rem;
+    transform: translateY(1px);
+}
+
+.form-label {
+    margin-bottom: .25rem;
+}
+
+.form-check {
+    min-height: 0;
+    margin-bottom: 0;
+}
+
 #timestamps {
 	min-width: 350px;
 	height: 10rem;
