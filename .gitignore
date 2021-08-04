@@ -131,3 +131,6 @@ bin/
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+
+src/get_tags.js
+src/make_video.js
