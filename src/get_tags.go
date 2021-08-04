@@ -13,11 +13,11 @@ import (
     "github.com/Akumzy/ipc"
     "github.com/dhowden/tag"
     "github.com/gabriel-vasile/mimetype"
-    "github.com/tidwall/gjson"
-    ffmpeg "github.com/u2takey/ffmpeg-go"
+    ffmpeg "github.com/modfy/fluent-ffmpeg"
 )
 
-func getTags(channel *ipc.IPC, formData FormData) VideoData {
+func getTags(channel *ipc.IPC, formData FormData, ffprobePath string) VideoData {
+    ffmpeg.SetFfProbePath(ffprobePath)
     validatePaths(channel, formData)
 
     setLabel(channel, "reading " + path.Base(formData.albumDirectory) + "..")
@@ -40,7 +40,7 @@ func getTags(channel *ipc.IPC, formData FormData) VideoData {
         case "audio":
             var disc, track uint64
             var artist, albumArtist, title, album string
-            ffprobeJSON, err := ffmpeg.Probe(file); if err != nil { panic(err) }
+            ffprobeData, err := ffmpeg.Probe(file); if err != nil { panic(err) }
             metadata := getMetadata(file)
             
             if artist = metadata.Artist(); artist == "" {
@@ -59,17 +59,18 @@ func getTags(channel *ipc.IPC, formData FormData) VideoData {
                 album = "[untitled]"
             }
 
-            year    := strconv.Itoa(metadata.Year())
-            seconds := gjson.Get(ffprobeJSON, "format.duration").Float()
-            cover   := metadata.Picture()
+            year := strconv.Itoa(metadata.Year())
+            cover := metadata.Picture()
+
+            seconds, err := strconv.ParseFloat(ffprobeData["format"].(map[string]interface{})["duration"].(string), 64); if err != nil { panic(err) }
 
             // frankly i dont trust the tag library's assesment of track / disc numbers SORRY
-            if gjson.Get(ffprobeJSON, "format.tags.disc").Exists() {
-                disc = parseTrackTag(ffprobeJSON, "format.tags.disc")
+            if (ffprobeData["format"].(map[string]interface{})["tags"].(map[string]interface{})["disc"] != nil) {
+                disc = parseTrackTag(ffprobeData["format"].(map[string]interface{})["tags"].(map[string]interface{})["disc"].(string))
             } else { disc = 1 }
 
-            if gjson.Get(ffprobeJSON, "format.tags.track").Exists() {
-                track = parseTrackTag(ffprobeJSON, "format.tags.track")
+            if (ffprobeData["format"].(map[string]interface{})["tags"].(map[string]interface{})["track"] != nil) {
+                track = parseTrackTag(ffprobeData["format"].(map[string]interface{})["tags"].(map[string]interface{})["track"].(string))
             } else {
                 if !trackRe.MatchString(file) {
                     panic(errors.New("please make sure your filenames start with a track number" +
@@ -160,8 +161,8 @@ func getMetadata(filename string) (tag.Metadata) {
     return m
 }
 
-func parseTrackTag(m string, id string) (t uint64) {
-    t, err := strconv.ParseUint(strings.Split(gjson.Get(m, id).String(), "/")[0], 10, 64)
+func parseTrackTag(v string) (t uint64) {
+    t, err := strconv.ParseUint(strings.Split(v, "/")[0], 10, 64)
     if err != nil { panic(err) }; return
 }
 

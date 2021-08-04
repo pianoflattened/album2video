@@ -1,8 +1,10 @@
 // TODO: set or remove app icon
-const IPC = require('ipc-node-go')
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
+const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+const ffprobePath = require('@ffprobe-installer/ffprobe').path;
+const IPC = require('ipc-node-go')
 const path = require('path');
-const serialize = require('serialize-javascript');
+
 var progressBar;
 const ipc = new IPC('./bin/xX_FFMP3G_BL4CKB0X_Xx')
 
@@ -99,7 +101,7 @@ ipcMain.on("browse-output-directory", function(event) {
 // ipc is so easy :D
 ipcMain.on("make-video", function(event, jsonData) {
     let args = JSON.parse(jsonData);
-    ipc.init(args);
+    ipc.init(args.concat([ffprobePath, ffmpegPath]));
 
     ipc.on("log", console.log);
     ipc.on("error", console.error);

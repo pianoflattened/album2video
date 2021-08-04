@@ -26,6 +26,8 @@ type FormData struct {
     detectCover    bool
     separateFiles  bool
     outputPath     string
+    ffprobePath    string
+    ffmpegPath     string
 }
 
 type VideoData struct {
