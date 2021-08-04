@@ -15,4 +15,11 @@ npm install
 ```
 `npm start` 2 run
 
+### track detection
+the regex is currently as follows:
+```regex
+^([0-9]+|[A-Za-z]|[0-9]+[A-Za-z]|)(-| - |_| |)([0-9]+|[A-Za-z])(?=. | |_)
+```
+slap it into a site like https://regexr.com/ and type in track names to see if yours work. they probably will but if they dont submit a pr or otherwise let me know and i'll try to fix it
+
 # SORRY FOR MAKING AN ELECTRON APP !!!!!!!!!!!!!!!
