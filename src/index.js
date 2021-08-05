@@ -11,7 +11,7 @@ const form = {
 }
 const submitBtn = document.getElementById('submit');
 function updateSubmitBtn(f) {
-	submitBtn.disabled = !(f.albumDirectory.value && (f.coverPath.value /*|| f.detectCover.checked*/) && f.outputPath.value);
+	submitBtn.disabled = !(f.albumDirectory.value && (f.coverPath.value || f.detectCover.checked) && f.outputPath.value);
 }
 
 // file browse events
