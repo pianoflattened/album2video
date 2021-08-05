@@ -109,8 +109,16 @@ ipcMain.on("make-video", function(event, jsonData) {
         event.reply("progress-label", data);
     });
     
+    ipc.on("make-determinate", data => {
+    	event.reply("make-determinate");
+    });
+    
     ipc.on("set-progress", data => {
     	event.reply("set-progress", data);
+    });
+    
+    ipc.on("set-complete", data => {
+    	event.reply("set-complete", data);
     });
 
     ipc.on('close', (code) => {

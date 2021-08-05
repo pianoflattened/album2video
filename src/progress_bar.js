@@ -9,13 +9,13 @@ function sleep(ms) {
 module.exports = class ProgressBar {
 	constructor(DOMelement) {
 		this._DOMelement = DOMelement;
-		this._bar = DOMelement.querySelector(".progress-bar");
+		this._bar = DOMelement.querySelector("#progress-bar");
 		this._label = DOMelement.querySelector("#progress-label");
 	}
 	
 	async setProgress(progress) {
-		this._bar.setAttribute("aria-valuenow", progress.toString());
-		this._bar.setAttribute("style", "width: " + progress + "%");
+		this._bar.setAttribute("aria-valuenow", Math.round(progress*100.0).toString());
+		this._bar.setAttribute("style", "width: " + Math.round(progress*100.0) + "%;");
         await sleep(100);
 	}
 	
@@ -28,7 +28,7 @@ module.exports = class ProgressBar {
 		this._bar.setAttribute("aria-valuenow", "0");
 		this._bar.setAttribute("aria-valuemin", "0");
 		this._bar.setAttribute("aria-valuemax", "100");
-		this._bar.setAttribute("style", "width: 0%");
+		this._bar.setAttribute("style", "width: 0%;");
 		this._bar.class = "progress-bar";
         await sleep(100);
 	}
@@ -37,14 +37,14 @@ module.exports = class ProgressBar {
 		this._bar.setAttribute("aria-valuenow", "100");
 		this._bar.setAttribute("aria-valuemin", "0");
 		this._bar.setAttribute("aria-valuemax", "100");
-		this._bar.setAttribute("style", "width: 100%");
+		this._bar.setAttribute("style", "width: 100%;");
 		this._bar.setAttribute("class", "progress-bar progress-bar-striped progress-bar-animated");
         await sleep(100);
 	}
 	
 	async setComplete() {
 		this._bar.setAttribute("aria-valuenow", "100");
-		this._bar.setAttribute("style", "width: 100%");
+		this._bar.setAttribute("style", "width: 100%;");
 		if (this._bar.classList.contains("progress-bar-animated")) {
 			this._bar.classList.remove("progress-bar-animated");
 		}

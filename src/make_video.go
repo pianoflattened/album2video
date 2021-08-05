@@ -22,6 +22,7 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string, ffprobe
 	length           := time.Duration(0)
 	fileListContents := ""
 	
+	setLabel(channel, "making file list..")
 	for _, f := range videoData.audioFiles {
 		timestamps = append(timestamps, Timestamp{
 			artist: f.artist,
@@ -44,6 +45,9 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string, ffprobe
 	
 	makeConcatWav := exec.Command(ffmpegPath, "-progress", "pipe:2", "-f", "concat", "-safe", "0", "-i", fileList.Name(), "-c", "copy", concatWavName)
 	ffmpegStderr, _ := makeConcatWav.StderrPipe()
+	
+	makeDeterminate(channel)
+	setLabel(channel, "(1/2) concatenating audio files..")
 	makeConcatWav.Start()
 	
 	re := regexp.MustCompile(`out_time_ms=(\d+)`)
@@ -58,7 +62,7 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string, ffprobe
 	}
 	
 	makeConcatWav.Wait()
-	
+	setComplete(channel)
     //ffmpeg.SetFfProbePath(ffprobePath)
    	//stage1 := ffmpeg.NewCommand(ffmpegPath)
 }

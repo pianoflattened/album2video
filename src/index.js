@@ -106,6 +106,14 @@ ipcRenderer.on("progress-label", function(event, msg) {
     progressBar.setLabel(msg);
 });
 
+ipcRenderer.on("make-determinate", function(event) {
+	progressBar.makeDeterminate();
+});
+
 ipcRenderer.on("set-progress", function(event, progress) {
-	console.log(progress);
+	progressBar.setProgress(progress);
+});
+
+ipcRenderer.on("set-complete", function(event, progress) {
+	progressBar.setComplete();
 });
