@@ -108,6 +108,10 @@ ipcMain.on("make-video", function(event, jsonData) {
     ipc.on("progress-label", data => {
         event.reply("progress-label", data);
     });
+    
+    ipc.on("set-progress", data => {
+    	event.reply("set-progress", data);
+    });
 
     ipc.on('close', (code) => {
         console.log("child process closed with " + code);

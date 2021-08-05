@@ -105,3 +105,7 @@ submitBtn.addEventListener('click', function() {
 ipcRenderer.on("progress-label", function(event, msg) {
     progressBar.setLabel(msg);
 });
+
+ipcRenderer.on("set-progress", function(event, progress) {
+	console.log(progress);
+});

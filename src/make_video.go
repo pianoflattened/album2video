@@ -46,11 +46,15 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string, ffprobe
 	ffmpegStderr, _ := makeConcatWav.StderrPipe()
 	makeConcatWav.Start()
 	
+	re := regexp.MustCompile(`out_time_ms=(\d+)`)
 	scanner := bufio.NewScanner(ffmpegStderr)
 	scanner.Split(scanFFmpegChunks)
 	for scanner.Scan() {
 		m := scanner.Text()
-		Println(channel, m)
+		a := re.FindAllStringSubmatch(m, -1)
+		c, _ := strconv.Atoi(a[len(a)-1][len(a[len(a)-1])-1])
+		//Println(channel, fmt.Sprintf("%v %v", time.Duration(c), float64(length * time.Second)))
+		setProgress(channel, float64(time.Duration(c)*time.Microsecond) / float64(length))
 	}
 	
 	makeConcatWav.Wait()
