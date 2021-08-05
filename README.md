@@ -10,7 +10,7 @@ git clone https://github.com/sunglasseds/album2video.git album2video
 cd album2video
 mkdir bin
 # build the scary evil go binary that does all the work
-go build -o ./bin/xX_FFMP3G_BL4CKB0X_Xx ./src/*.go
+go build -o ./bin/xX_FFMP3G_BL4CKB0X_Xx ./src/xX_FFMP3G_BL4CKB0X_Xx/*.go
 npm install
 ```
 `npm start` 2 run
