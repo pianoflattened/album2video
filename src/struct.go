@@ -15,9 +15,9 @@ type AudioFile struct {
 }
 
 type FormData struct {
-    albumDirectory, coverPath           string
-    detectCover, separateFiles          bool
-    outputPath, ffprobePath, ffmpegPath string
+    albumDirectory, coverPath   string
+    extractCover, separateFiles bool
+    outputPath                  string
 }
 
 type VideoData struct {

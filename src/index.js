@@ -5,13 +5,13 @@ var progressBar;
 const form = {
 	albumDirectory: document.getElementById("album-dir"),
 	coverPath: document.getElementById("cover-path"),
-	detectCover: document.getElementById("detect-cover"),
+	extractCover: document.getElementById("extract-cover"),
 	separateVideos: document.getElementById("separate-videos"),
 	outputPath: document.getElementById("output-path")
 }
 const submitBtn = document.getElementById('submit');
 function updateSubmitBtn(f) {
-	submitBtn.disabled = !(f.albumDirectory.value && (f.coverPath.value || f.detectCover.checked) && f.outputPath.value);
+	submitBtn.disabled = !(f.albumDirectory.value && (f.coverPath.value || f.extractCover.checked) && f.outputPath.value);
 }
 
 // file browse events
@@ -48,7 +48,7 @@ ipcRenderer.on("browse-output-successful", function(event, filePath) {
 });
 
 
-form.detectCover.addEventListener('change', function() {
+form.extractCover.addEventListener('change', function() {
 	if (this.checked) {
 		console.log("checked");
 		form.coverPath.setAttribute("disabled", "");
@@ -91,7 +91,7 @@ submitBtn.addEventListener('click', function() {
 	let formData = [
         form.albumDirectory.value, 
         form.coverPath.value,
-        form.detectCover.checked,
+        form.extractCover.checked,
         form.separateVideos.checked, 
         form.outputPath.value
     ];

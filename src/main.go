@@ -21,17 +21,15 @@ func main() {
         formData := FormData{
             albumDirectory: os.Args[1],
             coverPath: os.Args[2],
-            detectCover: os.Args[3] == "true",
+            extractCover: os.Args[3] == "true",
             separateFiles: os.Args[4] == "true",
             outputPath: os.Args[5],
-            ffprobePath: os.Args[6],
-            ffmpegPath: os.Args[7],
         }
         ffprobePath := os.Args[6]
         ffmpegPath := os.Args[7]
 
         videoData := getTags(ipcIO, formData, ffprobePath)
-        makeVideo(ipcIO, videoData, ffmpegPath, ffprobePath)
+        makeVideo(ipcIO, videoData, ffmpegPath)
     }()
 
     ipcIO.Start()

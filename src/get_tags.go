@@ -133,7 +133,7 @@ func validatePaths(channel *ipc.IPC, formData FormData) {
         panic(errors.New("album directory is not a file or directory"))
     }
 
-    if !formData.detectCover {
+    if !formData.extractCover {
         setLabel(channel, "validating cover path..")
         stats, err = os.Stat(formData.coverPath); if err != nil { panic(err) }
 
