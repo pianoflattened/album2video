@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
     "io/ioutil"
     "os"
@@ -14,7 +15,6 @@ import (
     "time"
 
 	"github.com/Akumzy/ipc"
-	//"github.com/alessio/shellescape"
 )
 
 func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string, ffprobePath string) {
@@ -33,38 +33,72 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string, ffprobe
 		fileListContents += "file '" + strings.ReplaceAll(f.filename, `'`, `'\''`) + "'\n"
 		length += f.time
 	}
+	
+	if videoData.formData.detectCover {
+		setLabel(channel, "extracting cover art..")
+		if videoData.audioFiles[0].cover == nil {
+			panic(errors.New("there is no cover art embedded into the first track. please tag your files properly"))
+		}
+		autoCoverFile, err := ioutil.TempFile(path.Dir(videoData.audioFiles[0].filename), ".tmp-*."+videoData.audioFiles[0].cover.Ext)
+		if err != nil { panic(err) }
+		_, err = autoCoverFile.Write(videoData.audioFiles[0].cover.Data); if err != nil { panic(err) }
+		defer os.Remove(autoCoverFile.Name())
+		
+		videoData.formData.coverPath = autoCoverFile.Name()
+	}
+	
+	setLabel(channel, "calculating minimum framerate..")
+	framerate := float32((1.0*float32(time.Second))/float32(length))
+	Println(channel, framerate)
 
-	fileList, err := ioutil.TempFile(path.Dir(videoData.audioFiles[0].filename), "tmp-*.txt")
+	fileList, err := ioutil.TempFile(path.Dir(videoData.audioFiles[0].filename), ".tmp-*.txt")
 	if err != nil { panic(err) }; defer os.Remove(fileList.Name())
 	_, err = fileList.Write([]byte(fileListContents)); if err != nil { panic(err) }
 	
-	cw, err := ioutil.TempFile(path.Dir(videoData.audioFiles[0].filename), "tmp-*.wav")
+	makeDeterminate(channel)
+	setLabel(channel, "concatenating audio files..")
+	
+	cw, err := ioutil.TempFile(path.Dir(videoData.audioFiles[0].filename), ".tmp-*.wav")
 	if err != nil { panic(err) }; defer os.Remove(cw.Name())
 	concatWavName := cw.Name()
 	os.Remove(cw.Name()) // lol
 	
 	makeConcatWav := exec.Command(ffmpegPath, "-progress", "pipe:2", "-f", "concat", "-safe", "0", "-i", fileList.Name(), "-c", "copy", concatWavName)
-	ffmpegStderr, _ := makeConcatWav.StderrPipe()
-	
-	makeDeterminate(channel)
-	setLabel(channel, "(1/2) concatenating audio files..")
+	concatStderr, _ := makeConcatWav.StderrPipe()
 	makeConcatWav.Start()
 	
 	re := regexp.MustCompile(`out_time_ms=(\d+)`)
-	scanner := bufio.NewScanner(ffmpegStderr)
-	scanner.Split(scanFFmpegChunks)
-	for scanner.Scan() {
-		m := scanner.Text()
+	concatScanner := bufio.NewScanner(concatStderr)
+	concatScanner.Split(scanFFmpegChunks)
+	for concatScanner.Scan() {
+		m := concatScanner.Text()
 		a := re.FindAllStringSubmatch(m, -1)
 		c, _ := strconv.Atoi(a[len(a)-1][len(a[len(a)-1])-1])
-		//Println(channel, fmt.Sprintf("%v %v", time.Duration(c), float64(length * time.Second)))
-		setProgress(channel, float64(time.Duration(c)*time.Microsecond) / float64(length))
+		setProgress(channel, float32(time.Duration(c)*time.Microsecond) / float32(length))
 	}
 	
 	makeConcatWav.Wait()
-	setComplete(channel)
-    //ffmpeg.SetFfProbePath(ffprobePath)
-   	//stage1 := ffmpeg.NewCommand(ffmpegPath)
+	
+	makeDeterminate(channel)
+	setLabel(channel, "making output video..")
+	makeOutputVideo := exec.Command(ffmpegPath, "-progress", "pipe:2", "-y", "-loop", "0", "-r", fmt.Sprintf("%v", framerate), "-i", videoData.formData.coverPath, "-i", concatWavName, "-t", fmt.Sprintf("%v", length.Seconds()), "-r", fmt.Sprintf("%v", framerate), "-c", "copy", videoData.formData.outputPath)
+	outputStderr, _ := makeOutputVideo.StderrPipe()
+	makeOutputVideo.Start()
+	
+	outputScanner := bufio.NewScanner(outputStderr)
+	outputScanner.Split(scanFFmpegChunks)
+	for outputScanner.Scan() {
+		m := outputScanner.Text()
+		a := re.FindAllStringSubmatch(m, -1)
+		c, _ := strconv.Atoi(a[len(a)-1][len(a[len(a)-1])-1])
+		setProgress(channel, float32(time.Duration(c)*time.Microsecond) / float32(length))
+	}
+	
+	makeOutputVideo.Wait()
+
+   	if videoData.formData.detectCover {
+   		os.Remove(videoData.formData.coverPath)
+   	}
 }
 
 func durationToString(d time.Duration) (t string) {

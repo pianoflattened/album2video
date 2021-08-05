@@ -24,7 +24,7 @@ func getTags(channel *ipc.IPC, formData FormData, ffprobePath string) VideoData 
     albumDirectoryFile, err := os.Open(formData.albumDirectory); if err != nil { panic(err) }
     files, err := albumDirectoryFile.Readdirnames(-1); if err != nil { panic(err) }
     
-    discTracks := make(map[uint64]uint64)
+    discTracks := make(map[uint32]uint32)
     audioFiles := []AudioFile{}
     imageFiles := []string{}
 
@@ -38,7 +38,7 @@ func getTags(channel *ipc.IPC, formData FormData, ffprobePath string) VideoData 
 
         switch strings.Split(mime.String(), "/")[0] {
         case "audio":
-            var disc, track uint64
+            var disc, track uint32
             var artist, albumArtist, title, album string
             ffprobeData, err := ffmpeg.Probe(file); if err != nil { panic(err) }
             metadata := getMetadata(file)
@@ -62,7 +62,8 @@ func getTags(channel *ipc.IPC, formData FormData, ffprobePath string) VideoData 
             year := strconv.Itoa(metadata.Year())
             cover := metadata.Picture()
 
-            seconds, err := strconv.ParseFloat(ffprobeData["format"].(map[string]interface{})["duration"].(string), 64); if err != nil { panic(err) }
+            seconds_, err := strconv.ParseFloat(ffprobeData["format"].(map[string]interface{})["duration"].(string), 32); if err != nil { panic(err) }
+            seconds := float32(seconds_)
 
             // frankly i dont trust the tag library's assesment of track / disc numbers SORRY
             if (ffprobeData["format"].(map[string]interface{})["tags"].(map[string]interface{})["disc"] != nil) {
@@ -98,7 +99,7 @@ func getTags(channel *ipc.IPC, formData FormData, ffprobePath string) VideoData 
                 year: year,
                 track: track,
                 disc: disc,
-                time: time.Duration(seconds * float64(time.Second)),
+                time: time.Duration(seconds * float32(time.Second)),
                 cover: cover,
                 discTracks: &discTracks,
             })
@@ -164,36 +165,40 @@ func getMetadata(filename string) (tag.Metadata) {
     return m
 }
 
-func parseTrackTag(v string) (t uint64) {
-    t, err := strconv.ParseUint(strings.Split(v, "/")[0], 10, 64)
-    if err != nil { panic(err) }; return
+func parseTrackTag(v string) uint32 {
+    t, err := strconv.ParseUint(strings.Split(v, "/")[0], 10, 32)
+    if err != nil { panic(err) }; return uint32(t)
 }
 
-func parseTrack(filename string, trackRe *regexp.Regexp) (d, t uint64) {
+func parseTrack(filename string, trackRe *regexp.Regexp) (d, t uint32) {
     submatches := trackRe.FindSubmatch([]byte(filename))
     discSubmatch := string(submatches[1])
     trackSubmatch := string(submatches[3])
     
-    d, err := strconv.ParseUint(discSubmatch, 10, 64)
+    d_, err := strconv.ParseUint(discSubmatch, 10, 32)
     if err != nil {
-        d = 1
+        d = uint32(1)
         switch len(discSubmatch) {
         case 1:
-            d += uint64(strings.Index(strings.ToLower(string(discSubmatch[0])), "abcdefghijklmnopqrstuvwxyz"))
+            d += uint32(strings.Index(strings.ToLower(string(discSubmatch[0])), "abcdefghijklmnopqrstuvwxyz"))
             fallthrough
         case 2:
-            d += uint64(strings.Index(strings.ToLower(string(discSubmatch[1])), "abcdefghijklmnopqrstuvwxyz")*26)
+            d += uint32(strings.Index(strings.ToLower(string(discSubmatch[1])), "abcdefghijklmnopqrstuvwxyz")*26)
         default:
             panic(err)
         }
+    } else {
+    	d = uint32(d_)
     }
 
-    t, err = strconv.ParseUint(trackSubmatch, 10, 64)
+    t_, err := strconv.ParseUint(trackSubmatch, 10, 32)
     if err != nil {
         if len(trackSubmatch) != 1 {
             panic(err)
         }
-        t = uint64(strings.Index(strings.ToLower(string(trackSubmatch[0])), "abcdefghijklmnopqrstuvwxyz") + 1)
+        t = uint32(strings.Index(strings.ToLower(string(trackSubmatch[0])), "abcdefghijklmnopqrstuvwxyz") + 1)
+    } else {
+    	t = uint32(t_)
     }
     return
 }
@@ -216,9 +221,9 @@ func (s byTrack) Less(i, j int) bool {
     return iOverall < jOverall
 }
 
-func overallTrackNumber(track, disc uint64, discTracks *map[uint64]uint64) (n uint64) {
+func overallTrackNumber(track, disc uint32, discTracks *map[uint32]uint32) (n uint32) {
     n = track
-    for i := uint64(1); i <= disc-1; i++ {
+    for i := uint32(1); i <= disc-1; i++ {
         n += (*discTracks)[i]
     }
     return n

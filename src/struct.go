@@ -8,8 +8,8 @@ import (
 
 type AudioFile struct {
     filename, artist, albumArtist, album, title, year string
-	track, disc										  uint64
-    discTracks  									  *map[uint64]uint64
+	track, disc										  uint32
+    discTracks  									  *map[uint32]uint32
     time        									  time.Duration
     cover       									  *tag.Picture
 }
@@ -24,7 +24,7 @@ type VideoData struct {
     formData   FormData
     audioFiles []AudioFile
     imageFiles []string
-    discTracks map[uint64]uint64
+    discTracks map[uint32]uint32
 }
 
 type Timestamp struct {
