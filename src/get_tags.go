@@ -115,8 +115,6 @@ func getTags(channel *ipc.IPC, formData FormData, ffprobePath string) VideoData 
     	panic(errors.New("you need sound files in the album directory"))
     }
 
-    Println(channel, audioFiles)
-
     return VideoData{
         formData: formData,
         audioFiles: audioFiles,

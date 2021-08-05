@@ -49,7 +49,6 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string, ffprobe
 	
 	setLabel(channel, "calculating minimum framerate..")
 	framerate := float32((1.0*float32(time.Second))/float32(length))
-	Println(channel, framerate)
 
 	fileList, err := ioutil.TempFile(path.Dir(videoData.audioFiles[0].filename), ".tmp-*.txt")
 	if err != nil { panic(err) }; defer os.Remove(fileList.Name())
