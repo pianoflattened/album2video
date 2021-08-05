@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
     "time"
 
     "github.com/dhowden/tag"
@@ -28,5 +29,13 @@ type VideoData struct {
 }
 
 type Timestamp struct {
-	artist, title, time string
+	Artist 		string `json:"artist"`
+	AlbumArtist string `json:"albumArtist"`
+	Title 		string `json:"title"`
+	Time 		string `json:"time"`
+}
+
+func (t Timestamp) String() (s string) {
+	b, err := json.Marshal(t); if err != nil { panic(err) }
+	return string(b)
 }

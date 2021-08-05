@@ -1,15 +1,17 @@
 // TODO: set or remove app icon
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
+//const BezierEasing = require('bezier-easing');
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 const ffprobePath = require('@ffprobe-installer/ffprobe').path;
 const IPC = require('ipc-node-go')
 const path = require('path');
+var win;
 
 var progressBar;
 const ipc = new IPC('./bin/xX_FFMP3G_BL4CKB0X_Xx')
 
 function createWindow () {  
-	const win = new BrowserWindow({
+	win = new BrowserWindow({
 		useContentSize: true,
 		width: 366,    
 		height: 411,
@@ -18,7 +20,7 @@ function createWindow () {
 			nodeIntegration: true,
 			contextIsolation: false
 		},
-		//resizable: false,
+		resizable: false,
 		autoHideMenuBar: true
 	});
 	win.loadFile('src/index.html');
@@ -117,6 +119,10 @@ ipcMain.on("make-video", function(event, jsonData) {
     	event.reply("set-progress", data);
     });
     
+    ipc.on("timestamps", timestamps => {
+    	event.reply("timestamps", timestamps);
+    });
+    
     ipc.on("set-complete", data => {
     	event.reply("set-complete", data);
     });
@@ -124,4 +130,166 @@ ipcMain.on("make-video", function(event, jsonData) {
     ipc.on('close', (code) => {
         console.log("child process closed with " + code);
     });
+});
+
+
+// DONT LOOK DOWN HERE THIS PART IS REALLY BAD
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//var easeCurve = BezierEasing(0.25, 0.1, 0.25, 1.0);
+ipcMain.on("resize-window", function(event, btnclass) {
+	console.log(btnclass); // 365 409   365 436
+	win.setResizable(true);
+	if (btnclass == "btn btn-primary") { // faster if i calculate by hand lol
+		/*setTimeout(_ => win.setSize(365, 410, true), 17);
+		setTimeout(_ => win.setSize(365, 411, true), 33);
+		setTimeout(_ => win.setSize(365, 414, true), 50);
+		setTimeout(_ => win.setSize(365, 416, true), 67);
+		setTimeout(_ => win.setSize(365, 419, true), 83);
+		setTimeout(_ => win.setSize(365, 422, true), 100);
+		setTimeout(_ => win.setSize(365, 425, true), 117);
+		setTimeout(_ => win.setSize(365, 427, true), 133);
+		setTimeout(_ => win.setSize(365, 428, true), 150);
+		setTimeout(_ => win.setSize(365, 430, true), 167);
+		setTimeout(_ => win.setSize(365, 431, true), 183);
+		setTimeout(_ => win.setSize(365, 432, true), 200);
+		setTimeout(_ => win.setSize(365, 433, true), 217);
+		setTimeout(_ => win.setSize(365, 434, true), 233);
+		setTimeout(_ => win.setSize(365, 435, true), 250);
+		setTimeout(_ => win.setSize(365, 435, true), 283);*/
+		setTimeout(_ => win.setSize(365, 436, true), 300);
+	} else {
+		/*setTimeout(_ => win.setSize(365, 435, true), 17);
+		setTimeout(_ => win.setSize(365, 434, true), 33);
+		setTimeout(_ => win.setSize(365, 431, true), 50);
+		setTimeout(_ => win.setSize(365, 429, true), 67);
+		setTimeout(_ => win.setSize(365, 426, true), 83);
+		setTimeout(_ => win.setSize(365, 423, true), 100);
+		setTimeout(_ => win.setSize(365, 420, true), 117);
+		setTimeout(_ => win.setSize(365, 418, true), 133);
+		setTimeout(_ => win.setSize(365, 417, true), 150);
+		setTimeout(_ => win.setSize(365, 415, true), 167);
+		setTimeout(_ => win.setSize(365, 414, true), 183);
+		setTimeout(_ => win.setSize(365, 413, true), 200);
+		setTimeout(_ => win.setSize(365, 412, true), 217);
+		setTimeout(_ => win.setSize(365, 411, true), 233);
+		setTimeout(_ => win.setSize(365, 410, true), 250);*/
+		setTimeout(_ => win.setSize(365, 409, true), 300);
+	}
+	setTimeout(_ => win.setResizable(false), 350);
 });

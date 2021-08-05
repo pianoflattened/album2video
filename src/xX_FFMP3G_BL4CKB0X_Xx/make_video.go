@@ -25,9 +25,10 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string) {
 	setLabel(channel, "making file list..")
 	for _, f := range videoData.audioFiles {
 		timestamps = append(timestamps, Timestamp{
-			artist: f.artist,
-			title: f.title,
-			time: durationToString(length),
+			Artist: f.artist,
+			Title: f.title,
+			AlbumArtist: f.albumArtist,
+			Time: durationToString(length),
 		})
 		
 		fileListContents += "file '" + strings.ReplaceAll(f.filename, `'`, `'\''`) + "'\n"
@@ -98,6 +99,9 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string) {
    	if videoData.formData.extractCover {
    		os.Remove(videoData.formData.coverPath)
    	}
+   	
+   	sendTimestamps(channel, timestamps)
+   	setComplete(channel)
 }
 
 func durationToString(d time.Duration) (t string) {

@@ -34,18 +34,23 @@
 		
 		<hr>
 		
-		<div class="mb-3">
+		<div class="input-group mb-3 ts">
 			<label for="timestamps" class="form-label">timestamps</label>
+			<div id="textarea-container">
 			<textarea class="form-control" id="timestamps" rows="12" readonly></textarea>
+			<button id="collapse-formatting" class="btn btn-primary collapsed" data-bs-toggle="collapse" href="#formatting" role="button" aria-expanded="false" aria-controls="formatting"></button></div>
+			<div class="collapse" id="formatting">
+				<input class="input-group-text form-control form-control-sm" type="text" value="" id="track-formatting" placeholder="track formatting">
+			</div>
 		</div>
+		
+		<hr>
 		
 		<div class="input-group mb-3">
 			<input type="text" class="form-control" id="output-path" placeholder="output path" aria-label="output path" aria-describedby="browse-output">
 			<button class="btn btn-secondary input-group-text" id="browse-output" browsetype="path">browse</button>
 		</div>
 
-		<hr>
-		
 		<div id="submit-div">
 			<div class="progress-container">
 				<div id="progress-label">&nbsp;</div>

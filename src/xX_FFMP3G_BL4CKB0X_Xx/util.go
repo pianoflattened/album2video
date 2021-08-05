@@ -27,6 +27,10 @@ func makeDeterminate(ipc *ipc.IPC) {
 	ipc.Send("make-determinate", "GO!!!!!!!!")
 }
 
+func sendTimestamps(ipc *ipc.IPC, timestamps []Timestamp) {
+	ipc.Send("timestamps", timestamps)
+}
+
 func Println(ipc *ipc.IPC, msg interface{}) {
     ipc.Send("log", fmt.Sprintf("%v", msg))
 }

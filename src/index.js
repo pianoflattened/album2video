@@ -102,6 +102,11 @@ submitBtn.addEventListener('click', function() {
     ipcRenderer.send("make-video", JSON.stringify(formData));
 });
 
+const collapseFormatting = document.getElementById('collapse-formatting');
+collapseFormatting.addEventListener('click', function() {
+	ipcRenderer.send('resize-window', collapseFormatting.className);
+});
+
 ipcRenderer.on("progress-label", function(event, msg) {
     progressBar.setLabel(msg);
 });
@@ -114,6 +119,12 @@ ipcRenderer.on("set-progress", function(event, progress) {
 	progressBar.setProgress(progress);
 });
 
-ipcRenderer.on("set-complete", function(event, progress) {
+ipcRenderer.on("timestamps", function(event, timestamps) {
+	let withArtists = "";
+	let withoutArtists = "";
+	console.log(timestamps);
+});
+
+ipcRenderer.on("set-complete", function(event) {
 	progressBar.setComplete();
 });
