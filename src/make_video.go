@@ -34,7 +34,7 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string, ffprobe
 		length += f.time
 	}
 	
-	if videoData.formData.detectCover {
+	if videoData.formData.detectCover { // first try :D
 		setLabel(channel, "extracting cover art..")
 		if videoData.audioFiles[0].cover == nil {
 			panic(errors.New("there is no cover art embedded into the first track. please tag your files properly"))
