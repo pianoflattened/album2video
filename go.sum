@@ -1,5 +1,7 @@
 github.com/Akumzy/ipc v0.0.2 h1:MT0/+YiLSAkUCNHXxqd8AlPUxTCcZM3oaS06JNRpN94=
 github.com/Akumzy/ipc v0.0.2/go.mod h1:OkAjH794j4HxvBwwBVofH65pR9qHsCbiUfmI6b/lGg8=
+github.com/alessio/shellescape v1.4.1 h1:V7yhSDDn8LP4lc4jS8pFkt0zCnzVJlG5JXy9BVKJUX0=
+github.com/alessio/shellescape v1.4.1/go.mod h1:PZAiSCk0LJaZkiCSkPv8qIobYglO3FPpyFjDCtHLS30=
 github.com/aws/aws-sdk-go v1.38.20 h1:QbzNx/tdfATbdKfubBpkt84OM6oBkxQZRw6+bW2GyeA=
 github.com/aws/aws-sdk-go v1.38.20/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=

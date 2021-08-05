@@ -110,6 +110,9 @@ func getTags(channel *ipc.IPC, formData FormData, ffprobePath string) VideoData 
 
     setLabel(channel, "ordering audio files..")
     sort.Sort(byTrack(audioFiles))
+    if len(audioFiles) < 1 {
+    	panic(errors.New("you need sound files in the album directory"))
+    }
 
     Println(channel, audioFiles)
 
