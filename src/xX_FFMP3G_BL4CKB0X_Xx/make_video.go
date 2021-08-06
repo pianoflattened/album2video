@@ -17,7 +17,7 @@ import (
 	"github.com/Akumzy/ipc"
 )
 
-func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string) {
+func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string) string {
 	timestamps       := []Timestamp{}
 	length           := time.Duration(0)
 	fileListContents := ""
@@ -51,19 +51,21 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string) {
 	setLabel(channel, "calculating minimum framerate..")
 	framerate := float32((1.0*float32(time.Second))/float32(length))
 
-	fileList, err := ioutil.TempFile(path.Dir(videoData.audioFiles[0].filename), ".tmp-*.txt")
+	fileList, err := ioutil.TempFile(path.Dir(videoData.audioFiles[0].filename), ".CONCAT--[BIT_LY9099]--*.txt")
+	Println(channel, fileList.Name())
 	if err != nil { panic(err) }; defer os.Remove(fileList.Name())
 	_, err = fileList.Write([]byte(fileListContents)); if err != nil { panic(err) }
 	
 	makeDeterminate(channel)
 	setLabel(channel, "concatenating audio files..")
 	
-	cw, err := ioutil.TempFile(path.Dir(videoData.audioFiles[0].filename), ".tmp-*.wav")
+	cw, err := ioutil.TempFile(path.Dir(videoData.audioFiles[0].filename), ".CONCAT--[BIT_LY9099]--*.wav")
+	Println(channel, cw.Name())
 	if err != nil { panic(err) }; defer os.Remove(cw.Name())
 	concatWavName := cw.Name()
-	os.Remove(cw.Name()) // lol
+	cw.Close(); os.Remove(cw.Name()) // lol
 	
-	makeConcatWav := exec.Command(ffmpegPath, "-progress", "pipe:2", "-f", "concat", "-safe", "0", "-i", fileList.Name(), "-c", "copy", concatWavName)
+	makeConcatWav := exec.Command(ffmpegPath, "-progress", "pipe:2", "-y", "-f", "concat", "-safe", "0", "-i", fileList.Name(), "-c", "copy", concatWavName)
 	concatStderr, _ := makeConcatWav.StderrPipe()
 	makeConcatWav.Start()
 	
@@ -79,6 +81,9 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string) {
 	
 	makeConcatWav.Wait()
 	
+	fileList.Close()
+	err = os.Remove(fileList.Name()); if err != nil { Println(channel, err) }
+	
 	makeDeterminate(channel)
 	setLabel(channel, "making output video..")
 	makeOutputVideo := exec.Command(ffmpegPath, "-progress", "pipe:2", "-y", "-loop", "0", "-r", fmt.Sprintf("%v", framerate), "-i", videoData.formData.coverPath, "-i", concatWavName, "-t", fmt.Sprintf("%v", length.Seconds()), "-r", fmt.Sprintf("%v", framerate), "-c", "copy", videoData.formData.outputPath)
@@ -89,19 +94,23 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string) {
 	outputScanner.Split(scanFFmpegChunks)
 	for outputScanner.Scan() {
 		m := outputScanner.Text()
+		Println(channel, m)
 		a := re.FindAllStringSubmatch(m, -1)
 		c, _ := strconv.Atoi(a[len(a)-1][len(a[len(a)-1])-1])
 		setProgress(channel, float32(time.Duration(c)*time.Microsecond) / float32(length))
 	}
 	
 	makeOutputVideo.Wait()
-
+	
+	//err = os.Remove(concatWavName); if err != nil { Println(channel, err) }
    	if videoData.formData.extractCover {
    		os.Remove(videoData.formData.coverPath)
    	}
    	
    	sendTimestamps(channel, timestamps)
    	setComplete(channel)
+	
+	return concatWavName
 }
 
 func durationToString(d time.Duration) (t string) {
@@ -157,3 +166,12 @@ func scanFFmpegChunks(data []byte, atEOF bool) (advance int, token []byte, err e
 	
 	return 0, nil, nil
 }
+
+
+/* 
+
+
+
+C:\Users\user\dev\album2video\node_modules\@ffmpeg-installer\win32-x64\ffmpeg.exe -progress pipe:2 -y -loop 0 -r 0.00025026314 -i . -i C:\Users\user\Documents\Soulseek Downloads\complete\lougrig1962\taku sugimoto - chamber music (bottrop boy, 2003)\.tmpCONCAT--[BIT_LY9099]--419234378.wav -t 3995.794276352 -r 0.00025026314 -c copy C:\Users\user\Documents\Soulseek Downloads\complete\lougrig1962\taku sugimoto - chamber music (bottrop boy, 2003)\/out.mp4 null
+
+*/

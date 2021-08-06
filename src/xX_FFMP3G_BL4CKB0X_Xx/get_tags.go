@@ -18,7 +18,7 @@ import (
 
 func getTags(channel *ipc.IPC, formData FormData, ffprobePath string) VideoData {
     ffmpeg.SetFfProbePath(ffprobePath)
-    validatePaths(channel, formData)
+    formData = validatePaths(channel, formData)
 
     setLabel(channel, "reading " + path.Base(formData.albumDirectory) + "..")
     albumDirectoryFile, err := os.Open(formData.albumDirectory); if err != nil { panic(err) }
@@ -32,9 +32,19 @@ func getTags(channel *ipc.IPC, formData FormData, ffprobePath string) VideoData 
     trackRe := regexp.MustCompile(`^([0-9]+|[A-Za-z]{1,2}|[0-9]+[A-Za-z]|)(-| - |_| |)([0-9]+|[A-Za-z])(. | |_)`)
 
     for _, base := range files {
+		if strings.HasPrefix(base, ".CONCAT--[BIT_LY9099]--") {
+			os.Remove(path.Join(formData.albumDirectory, base)) // clean up after yrself
+			continue
+		}
         setLabel(channel, "reading " + base + "..")
         file := path.Join(formData.albumDirectory, base)
-        mime, err := mimetype.DetectFile(file); if err != nil { panic(err) }
+        mime, err := mimetype.DetectFile(file)
+		if err != nil {
+			if !strings.HasSuffix(errors.Unwrap(err).Error(), "The handle is invalid.") {
+				panic(err)
+			}
+			continue
+		}
 
         switch strings.Split(mime.String(), "/")[0] {
         case "audio":
@@ -123,7 +133,7 @@ func getTags(channel *ipc.IPC, formData FormData, ffprobePath string) VideoData 
     }
 }
 
-func validatePaths(channel *ipc.IPC, formData FormData) {
+func validatePaths(channel *ipc.IPC, formData FormData) FormData {
     setLabel(channel, "validating album path..")
     stats, err := os.Stat(formData.albumDirectory); if err != nil { panic(err) }
 
@@ -136,24 +146,31 @@ func validatePaths(channel *ipc.IPC, formData FormData) {
     if !formData.extractCover {
         setLabel(channel, "validating cover path..")
         stats, err = os.Stat(formData.coverPath); if err != nil { panic(err) }
-
-        if stats.Mode().IsRegular() {
-            formData.albumDirectory = path.Dir(formData.albumDirectory)
-        } else {
+		
+        if stats.Mode().IsRegular() { /* pass */ } else {
             panic(errors.New(formData.coverPath + " is not a file"))
         }
     }
 
     setLabel(channel, "validating output path..")
-    stats, err = os.Stat(formData.outputPath); if err != nil { panic(err) }
+    stats, err = os.Stat(formData.outputPath); if err != nil { 
+		if os.IsNotExist(err) {
+			f, err := os.Create(formData.outputPath)
+			if err != nil { panic(err) }
+			f.Close()
+		} else {
+			panic(err)
+		}
+	}
 
     if formData.separateFiles && stats.Mode().IsRegular() {
         formData.outputPath = path.Dir(formData.outputPath)
-    } else if !formData.separateFiles && stats.IsDir() {
+    } else if (!formData.separateFiles) && stats.IsDir() {
         formData.outputPath = path.Join(formData.outputPath, "out.mp4")
     } else if formData.separateFiles == stats.IsDir() { /* pass */ } else {
         panic(errors.New(formData.outputPath + " is not a file or directory"))
     }
+	return formData
 }
 
 func getMetadata(filename string) (tag.Metadata) {
@@ -198,6 +215,7 @@ func parseTrack(filename string, trackRe *regexp.Regexp) (d, t uint32) {
     } else {
     	t = uint32(t_)
     }
+
     return
 }
 

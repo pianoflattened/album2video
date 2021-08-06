@@ -1,4 +1,5 @@
 const { app, ipcRenderer } = require("electron");
+const path = require('path');
 const ProgressBar = require('./progress_bar.js');
 
 var progressBar;
@@ -51,10 +52,10 @@ ipcRenderer.on("browse-output-successful", function(event, filePath) {
 form.extractCover.addEventListener('change', function() {
 	if (this.checked) {
 		console.log("checked");
-		form.coverPath.setAttribute("disabled", "");
+		document.getElementById("browse-cover").setAttribute("disabled", "");
 	} else {
 		console.log("unchecked");
-		form.coverPath.removeAttribute("disabled");
+		document.getElementById("browse-cover").removeAttribute("disabled");
 	}
 });
 
@@ -88,8 +89,13 @@ for (const key in form) {
 
 submitBtn.addEventListener('click', function() {
     submitBtn.setAttribute("disabled","");
+	let ack = form.albumDirectory.value;
+	if (!ack.endsWith(path.sep)) {
+		ack += path.sep
+	}
+	
 	let formData = [
-        form.albumDirectory.value, 
+        ack, 
         form.coverPath.value,
         form.extractCover.checked,
         form.separateVideos.checked, 
@@ -104,7 +110,10 @@ submitBtn.addEventListener('click', function() {
 
 const collapseFormatting = document.getElementById('collapse-formatting');
 collapseFormatting.addEventListener('click', function() {
-	ipcRenderer.send('resize-window', collapseFormatting.className);
+	ipcRenderer.send('resize-window', {
+		btnclass: collapseFormatting.className, 
+		offsetWidth: collapseFormatting.offsetWidth
+	});
 });
 
 ipcRenderer.on("progress-label", function(event, msg) {
@@ -126,5 +135,9 @@ ipcRenderer.on("timestamps", function(event, timestamps) {
 });
 
 ipcRenderer.on("set-complete", function(event) {
-	progressBar.setComplete();
+	progressBar.setComplete().then(_ => submitBtn.removeAttribute("disabled"));
+});
+
+ipcRenderer.on("set-error", function(event, code) {
+	progressBar.error(code).then(_ => submitBtn.removeAttribute("disabled"));
 });

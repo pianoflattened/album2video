@@ -29,7 +29,10 @@ func main() {
         ffmpegPath := os.Args[7]
 
         videoData := getTags(ipcIO, formData, ffprobePath)
-        makeVideo(ipcIO, videoData, ffmpegPath)
+        concatWav := makeVideo(ipcIO, videoData, ffmpegPath)
+		defer func() {
+			err := os.Remove(concatWav); if err != nil { Println(ipcIO, err) }
+		}()
     }()
 
     ipcIO.Start()
