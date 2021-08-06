@@ -113,6 +113,7 @@ func getTags(channel *ipc.IPC, formData FormData, ffprobePath string) VideoData 
                 cover: cover,
                 discTracks: &discTracks,
             })
+			Println(channel, title)
 
             case "image":
                 imageFiles = append(imageFiles, file)

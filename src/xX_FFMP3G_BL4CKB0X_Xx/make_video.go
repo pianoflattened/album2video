@@ -23,12 +23,15 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string) string 
 	fileListContents := ""
 	
 	setLabel(channel, "making file list..")
-	for _, f := range videoData.audioFiles {
+	for i, f := range videoData.audioFiles {
 		timestamps = append(timestamps, Timestamp{
 			Artist: f.artist,
 			Title: f.title,
 			AlbumArtist: f.albumArtist,
 			Time: durationToString(length),
+			Disc: f.disc,
+			Track: f.track,
+			OverallTrack: i
 		})
 		
 		fileListContents += "file '" + strings.ReplaceAll(f.filename, `'`, `'\''`) + "'\n"

@@ -25,7 +25,7 @@ the regex is currently as follows:
 slap it into a site like https://regexr.com/ and type in track names to see if yours work. they probably will but if they dont submit a pr or otherwise let me know and i'll try to fix it
 
 ### tracklist formatting
-reference for myself dw about it yet
+reference for myself dw about it yet although if youve ever used printf in your life most of this should make sense
 ```%t title
 %s timestamp
 %r artist (indiscriminate)
@@ -33,11 +33,18 @@ reference for myself dw about it yet
 %d disc
 %n track number (overall)
 %w track number (within disc)
-%% percent symbol
+%% percent
+%{ left brace
+%} right brace
 
+%{ }v only include characters inside {} if %v exists 
+	v is an example value. %v is rendered at the %. i do not plan on making nesting work unless
+	someone somehow comes up w a practical use case - this means that the rules listed here do not 
+	apply to inside curly braces
 c lowercase
 C title case
-[width] pad number to width```
+(number) pad zeroes
+	cannot be less than 3 since thats the minimum for a valid yt timestamp (0:00)
 ---
 
 # SORRY FOR MAKING AN ELECTRON APP !!!!!!!!!!!!!!!
