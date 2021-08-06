@@ -8,14 +8,21 @@ const path = require('path');
 var win;
 var baseWidth = 0;
 var baseHeight = 0;
-var ipc;
+var xX_FFMP3G_BL4CKB0X_Xx, trackfmt;
 var progressBar;
 
 if (process.platform == "win32") {
-	ipc = new IPC('./bin/xX_FFMP3G_BL4CKB0X_Xx.exe')
+	xX_FFMP3G_BL4CKB0X_Xx = new IPC('./bin/xX_FFMP3G_BL4CKB0X_Xx.exe')
+	trackfmt = new IPC('./bin/trackfmt.exe');
 } else { // (process.platform == "linux")
-	ipc = new IPC('./bin/xX_FFMP3G_BL4CKB0X_Xx');
+	xX_FFMP3G_BL4CKB0X_Xx = new IPC('./bin/xX_FFMP3G_BL4CKB0X_Xx');
+	trackfmt = new IPC('./bin/trackfmt');
 }
+
+xX_FFMP3G_BL4CKB0X_Xx.on("log", console.log);
+xX_FFMP3G_BL4CKB0X_Xx.on("error", console.error);
+trackfmt.on("log", console.log);
+trackfmt.on("error", console.error);
 
 function createWindow () {  
 	win = new BrowserWindow({
@@ -27,7 +34,7 @@ function createWindow () {
 			nodeIntegration: true,
 			contextIsolation: false
 		},
-		//resizable: false,
+		resizable: true,
 		autoHideMenuBar: true
 	});
 	win.loadFile('src/index.html');
@@ -49,8 +56,8 @@ ipcMain.on("auto-resize", function(event, width, height) {
 	let browserWindow = BrowserWindow.fromWebContents(event.sender);
 	browserWindow.setContentSize(width, height);
 	console.log(width, height);
-	baseWidth = width+16;
-	baseHeight = height+16;
+	baseWidth = width;
+	baseHeight = height;
 });
 
 ipcMain.on("browse-album", function(event) {
@@ -111,180 +118,139 @@ ipcMain.on("browse-output-directory", function(event) {
 });
 
 // ipc is so easy :D
-var times = 0;
+var blackboxtimes = 0;
+var trackfmttimes = 0;
 ipcMain.on("make-video", function(event, jsonData) {
     let args = JSON.parse(jsonData);
-    ipc.init(args.concat([ffprobePath, ffmpegPath]));
+    xX_FFMP3G_BL4CKB0X_Xx.init(args.concat([ffprobePath, ffmpegPath]));
 	
-	if (times === 0) {
-		times += 1
-		ipc.on("log", console.log);
-		ipc.on("error", console.error);
-		ipc.on("progress-label", data => {
+	if (blackboxtimes === 0) {
+		blackboxtimes += 1
+		xX_FFMP3G_BL4CKB0X_Xx.on("progress-label", data => {
 			event.reply("progress-label", data);
 		});
 
-		ipc.on("make-determinate", data => {
+		xX_FFMP3G_BL4CKB0X_Xx.on("make-determinate", data => {
 			event.reply("make-determinate");
 		});
 
-		ipc.on("set-progress", data => {
+		xX_FFMP3G_BL4CKB0X_Xx.on("set-progress", data => {
 			event.reply("set-progress", data);
 		});
 
-		ipc.on("timestamps", timestamps => {
-			event.reply("timestamps", timestamps);
+		xX_FFMP3G_BL4CKB0X_Xx.on("timestamps", timestamps => {
+			event.reply("get-timestamp-format", JSON.stringify(timestamps));
 		});
 
-		ipc.on("set-complete", data => {
+		xX_FFMP3G_BL4CKB0X_Xx.on("set-complete", data => {
 			event.reply("set-complete", data);
-			ipc.kill();
+			xX_FFMP3G_BL4CKB0X_Xx.kill();
 		});
 
-		ipc.on('close', (code) => {
+		xX_FFMP3G_BL4CKB0X_Xx.on('close', (code) => {
 			console.log("child process closed with " + code);
 		});
 	}
 });
 
+ipcMain.on("timestamp-format", function(event, data) {
+	let format = data.format;
+	let timestamps = data.timestamps;
+	
+	trackfmt.init([format, timestamps]);
+	
+	if (trackfmttimes === 0) {
+		trackfmttimes += 1;
+		trackfmt.on("result", data => {
+			event.reply("timestamps", data);
+			trackfmt.kill();
+		});
+	}
+});
 
 // DONT LOOK DOWN HERE THIS PART IS REALLY BAD
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 var easeCurve = BezierEasing(0.25, 0.1, 0.25, 1.0);
 ipcMain.on("resize-window", function(event, data) {
+	let browserWindow = BrowserWindow.fromWebContents(event.sender);
 	console.log(data.btnclass); // 365 409   365 436
 	console.log(baseWidth, baseHeight);
-	console.log(baseWidth, baseHeight+data.offsetWidth);
+	console.log(baseWidth, baseHeight+data.offsetHeight);
 	win.setResizable(true); // make sure you make this mac compatible (dont do all these stupid animation timeout lines on there)
-	let outalg = (n) => baseHeight+(n*data.offsetWidth);
-	let inalg = (n) => baseHeight+data.offsetWidth-(n*data.offsetWidth);
+	let outalg = (n) => baseHeight+(n*data.offsetHeight);
+	let inalg = (n) => baseHeight+data.offsetHeight-(n*data.offsetHeight);
 	if (data.btnclass == "btn btn-primary") {
-		for (i = 1; i <= 21; i++) {
-			setTimeout(_ => win.setSize(baseWidth, Math.round(outalg(easeCurve(i/21))), true), (350*i)/21);
-		} 
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(outalg(easeCurve(1/21))), true), 17);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(outalg(easeCurve(2/21))), true), 33);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(outalg(easeCurve(3/21))), true), 50);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(outalg(easeCurve(4/21))), true), 67);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(outalg(easeCurve(5/21))), true), 83);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(outalg(easeCurve(6/21))), true), 100);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(outalg(easeCurve(7/21))), true), 117);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(outalg(easeCurve(8/21))), true), 133);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(outalg(easeCurve(9/21))), true), 150);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(outalg(easeCurve(10/21))), true), 167);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(outalg(easeCurve(11/21))), true), 183);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(outalg(easeCurve(12/21))), true), 200);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(outalg(easeCurve(13/21))), true), 217);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(outalg(easeCurve(14/21))), true), 233);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(outalg(easeCurve(15/21))), true), 250);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(outalg(easeCurve(16/21))), true), 267);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(outalg(easeCurve(17/21))), true), 283);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(outalg(easeCurve(18/21))), true), 300);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(outalg(easeCurve(19/21))), true), 317);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(outalg(easeCurve(20/21))), true), 333);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(outalg(easeCurve(21/21))), true), 350);
 	} else {
 		for (i = 1; i <= 21; i++) {
-			setTimeout(_ => win.setSize(baseWidth, Math.round(inalg(easeCurve(i/21))), true), (350*i)/21);
+			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(2/21))), true), 33);
+			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(1/21))), true), 17);
+			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(3/21))), true), 50);
+			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(4/21))), true), 67);
+			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(5/21))), true), 83);
+			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(6/21))), true), 100);
+			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(7/21))), true), 117);
+			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(8/21))), true), 133);
+			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(9/21))), true), 150);
+			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(10/21))), true), 167);
+			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(11/21))), true), 183);
+			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(12/21))), true), 200);
+			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(13/21))), true), 217);
+			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(14/21))), true), 233);
+			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(15/21))), true), 250);
+			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(16/21))), true), 267);
+			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(17/21))), true), 283);
+			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(18/21))), true), 300);
+			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(19/21))), true), 317);
+			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(20/21))), true), 333);
+			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(21/21))), true), 350);
 		} 
 	}
-	setTimeout(_ => win.setResizable(false), 350);
 });
+
+/*
+17
+33
+50
+67
+83
+100
+117
+133
+150
+167
+183
+200
+217
+233
+250
+267
+283
+300
+317
+333
+350
+*/
 
 /*setTimeout(_ => win.setSize(baseWidth, baseHeight+1, true), 17);
 setTimeout(_ => win.setSize(baseWidth, baseHeight+2, true), 33);

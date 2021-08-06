@@ -9,16 +9,16 @@ import (
 
 type AudioFile struct {
     filename, artist, albumArtist, album, title, year string
-	track, disc										  uint32
-    discTracks  									  *map[uint32]uint32
-    time        									  time.Duration
-    cover       									  *tag.Picture
+	track, disc											uint32
+    discTracks  									  		*map[uint32]uint32
+    time        									  		time.Duration
+    cover       									  		*tag.Picture
 }
 
 type FormData struct {
     albumDirectory, coverPath   string
     extractCover, separateFiles bool
-    outputPath                  string
+    outputPath                  	string
 }
 
 type VideoData struct {
@@ -30,9 +30,9 @@ type VideoData struct {
 
 type Timestamp struct {
 	Artist 		string `json:"artist"`
-	AlbumArtist string `json:"albumArtist"`
-	Title 		string `json:"title"`
-	Time 		string `json:"time"`
+	AlbumArtist 	string `json:"albumArtist"`
+	Title 			string `json:"title"`
+	Time 			string `json:"time"`
 }
 
 func (t Timestamp) String() (s string) {

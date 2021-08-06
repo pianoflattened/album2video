@@ -112,7 +112,7 @@ const collapseFormatting = document.getElementById('collapse-formatting');
 collapseFormatting.addEventListener('click', function() {
 	ipcRenderer.send('resize-window', {
 		btnclass: collapseFormatting.className, 
-		offsetWidth: collapseFormatting.offsetWidth
+		offsetHeight: process.platform == "win32" ? 28 : 27
 	});
 });
 
@@ -128,10 +128,11 @@ ipcRenderer.on("set-progress", function(event, progress) {
 	progressBar.setProgress(progress);
 });
 
-ipcRenderer.on("timestamps", function(event, timestamps) {
-	let withArtists = "";
-	let withoutArtists = "";
-	console.log(timestamps);
+ipcRenderer.on("get-timestamp-format", function(event, timestamps) {
+	ipcRenderer.send("timestamp-format", {
+		format: document.getElementById('track-formatting').value,
+		timestamps: timestamps
+	});
 });
 
 ipcRenderer.on("set-complete", function(event) {
