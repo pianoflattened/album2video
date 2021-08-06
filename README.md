@@ -24,6 +24,20 @@ the regex is currently as follows:
 ```
 slap it into a site like https://regexr.com/ and type in track names to see if yours work. they probably will but if they dont submit a pr or otherwise let me know and i'll try to fix it
 
+### tracklist formatting
+reference for myself dw about it yet
+```%t title
+%s timestamp
+%r artist (indiscriminate)
+%a artist (discriminate)
+%d disc
+%n track number (overall)
+%w track number (within disc)
+%% percent symbol
+
+c lowercase
+C title case
+[width] pad number to width```
 ---
 
 # SORRY FOR MAKING AN ELECTRON APP !!!!!!!!!!!!!!!
