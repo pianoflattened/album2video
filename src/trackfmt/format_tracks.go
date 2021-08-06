@@ -191,18 +191,6 @@ func Println(ipc *ipc.IPC, msg interface{}) {
     ipc.Send("log", fmt.Sprintf("%v", msg))
 }
 
-// very preliminary. i want this to detect languages etc or at least do well with english
-func TitleCase(s string) string {
-	words := strings.Split(s, " ")
-	var first, rest string
-	for i, word := range words {
-		first = string([]byte{word[0]})
-		rest = word[1:]
-		words[i] = strings.ToTitle(first) + strings.ToLower(rest)
-	}
-	return strings.Join(words, " ")
-}
-
 func Index(r rune, buf []rune) int {
 	for i, e := range buf {
 		if e == r {
