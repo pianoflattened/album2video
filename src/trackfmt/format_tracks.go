@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"strconv"
 
 	"github.com/Akumzy/ipc"
 )
@@ -12,13 +13,18 @@ import (
 {"artist":"Taku Sugimoto","albumArtist":"[unknown artist]","title":"Dotted music n┬░1","time":"1:03:00"}]
 */
 
-func formatTracks(channel *ipc.IPC, fmtString string, tracks string) (o string) {
+func _formatTracks(channel *ipc.IPC, fmtString string, tracks string) string {
 	var timestamps []Timestamp
 	json.Unmarshal([]byte(tracks), &timestamps)
+	o := ""
 
 	dominantArtist, multDiscs := calcDominantArtist(channel, timestamps)
+	for i := range timestamps {
+		Println(channel, i)
+	}
 
 	for _, timestamp := range timestamps {
+		Println(channel, timestamp)
 		s := fmtState{
 			tokenBuf:       []rune{},
 			padding:        3,
@@ -64,49 +70,65 @@ func formatTracks(channel *ipc.IPC, fmtString string, tracks string) (o string) 
 			}
 
 			if s.length() > 0 {
+				Println(channel, string(s.tokenBuf))
 				switch c {
 				case 't':
-					line += s.render(timestamp.Title) // render auto-clears
+					line += render(channel, &s, timestamp.Title, "title")
+					s.clear()
 				case 's':
-					line += s.render(timestamp.Time, true)
+					line += render(channel, &s, timestamp.Time, "time")
+					s.clear()
 				case 'r':
-					line += s.render(timestamp.Artist)
+					line += render(channel, &s, timestamp.Artist, "artist")
+					s.clear()
 				case 'a':
-					line += s.render(discriminate(timestamp.Artist, dominantArtist))
+					line += render(channel, &s, discriminate(timestamp.Artist, dominantArtist), "artist")
+					s.clear()
 				case 'd':
-					line += s.render(timestamp.Disc, false)
+					line += render(channel, &s, strconv.Itoa(timestamp.Disc), "disc")
+					s.clear()
 				case 'n':
-					line += s.render(timestamp.OverallTrack)
+					line += render(channel, &s, strconv.Itoa(timestamp.OverallTrack), "track")
+					s.clear()
 				case 'w':
-					line += s.render(timestamp.Track)
+					line += render(channel, &s, strconv.Itoa(timestamp.Track), "track")
+					s.clear()
+				case 'c':
+					s.fCase = lower
+					s.append(c)
+				case 'C':
+					s.fCase = title
+					s.append(c)
 				case '[':
 					s.renderRight = true
 					if s.length() == 1 {
 						s.inBrackets = true
-						continue
 					}
 				case '{':
 					s.renderRight = false
 					if s.length() == 1 {
 						s.inBrackets = true
-						continue
 					}
 				default:
 					if s.length() == 1 {
 						s.clear() // consume the next character bc im evil
-						continue
 					}
 				}
+				continue
 			}
 
 			if c == '%' {
 				s.append(c)
 				continue
 			}
-
 			line += string([]rune{c})
+			Println(channel, line)
 		}
 		o += line + "\n"
+		Println(channel, o)
 	}
-	return
+
+	channel.Send("result", o)
+	Println(channel, "result: "+o)
+	return o
 }

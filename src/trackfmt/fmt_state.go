@@ -2,19 +2,20 @@ package main
 
 import (
 	"math"
-	"strconv"
 	"strings"
+
+	"github.com/Akumzy/ipc"
 )
 
 type fmtState struct {
-	tokenBuf   []rune
-	padding    int
-	fCase      FieldCase
-	bracketBuf []rune
-	renderRight,
-	bracketEscaped,
-	multDiscs,
-	inBrackets bool
+	tokenBuf       []rune
+	padding        int
+	fCase          FieldCase
+	bracketBuf     []rune
+	renderRight    bool
+	bracketEscaped bool
+	multDiscs      bool
+	inBrackets     bool
 }
 
 func (s *fmtState) append(r rune) {
@@ -38,62 +39,42 @@ func (s *fmtState) clear() {
 	(*s).bracketBuf = []rune{}
 }
 
-func (s *fmtState) render(args ...interface{}) string { // evil definition sorry ik its gross
-	if len(args) > 2 {
-		return ""
-	}
-
-	var field string
-	time := ""
-
-	if len(args) == 2 {
-		if args[1].(bool) {
-			field = args[0].(string)
-			time = pad(strings.Join(strings.Split(field, ":"), ""), int(math.Max(float64((*s).padding), 3)))
-			if len(time) > 4 {
-				time = time[0:len(time)-4] + ":" + time[len(time)-4:]
-			}
-			s.clear()
-			field = time[0:len(time)-2] + ":" + time[len(time)-2:]
-		}
-	}
-
-	switch args[0].(type) {
-	case string:
-		field = args[0].(string)
+func render(channel *ipc.IPC, s *fmtState, n, field string) string {
+	Println(channel, []string{n, field})
+	switch field {
+	case "artist":
+		fallthrough
+	case "title":
 		if (*s).fCase == lower {
-			s.clear()
-			field = strings.ToLower(field)
+			n = strings.ToLower(field)
 		} else if (*s).fCase == title {
-			s.clear()
-			field = TitleCase(field, false)
+			n = TitleCase(n, false)
 		}
-
-	case int:
+	case "time":
+		n = pad(strings.Join(strings.Split(n, ":"), ""), int(math.Max(float64((*s).padding), 3)))
+		if len(n) > 4 {
+			n = n[0:len(n)-4] + ":" + n[len(n)-4:]
+		}
+		n = n[0:len(n)-2] + ":" + n[len(n)-2:]
+	case "disc":
+		fallthrough
+	case "track":
 		p := (*s).padding
-		s.clear()
-		field = pad(strconv.Itoa(args[0].(int)), p)
+		n = pad(n, p)
 	}
 
 	if len(s.bracketBuf) > 0 {
-		if field != "" {
-			if len(args) > 1 {
-				if !args[1].(bool) && s.multDiscs {
-					goto renderside
-				}
-			}
-		renderside:
-			if s.renderRight {
-				field = field + string(s.bracketBuf)
+		if (field == "disc" && s.multDiscs && n != "") || (field != "disc" && n != "") {
+			if (*s).renderRight {
+				n = n + string((*s).bracketBuf)
 			} else {
-				field = string(s.bracketBuf) + field
+				n = string((*s).bracketBuf) + n
 			}
 		}
 	}
-
-	s.clear()
-
-	return field
+	Println(channel, "jdjdjdjdj\n"+n)
+	Println(channel, n)
+	return n
 }
 
 func pad(s string, a int) string {

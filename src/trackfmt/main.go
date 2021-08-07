@@ -4,6 +4,7 @@ import (
 	//"encoding/json"
 	"fmt"
 	"os"
+
 	//"strings"
 
 	"github.com/Akumzy/ipc"
@@ -18,16 +19,14 @@ func main() {
 	go func() {
 		fmtStr := os.Args[1]
 		timestamps := os.Args[2]
-		Println(ipcIO, fmtStr+" | "+timestamps)
 
-		resp := formatTracks(ipcIO, fmtStr, timestamps)
-
-		ipcIO.Send("parsed-titles", resp)
+		formatted := formatTracks(ipcIO, fmtStr, timestamps)
+		ipcIO.Send("result", formatted)
 	}()
 
 	ipcIO.Start()
 }
 
 func Println(ipc *ipc.IPC, msg interface{}) {
-	ipc.Send("log", fmt.Sprintf("%v", msg))
+	ipc.Send("log", fmt.Sprintf("%v SYS:%#v", msg, msg))
 }
