@@ -4,7 +4,7 @@ gui application that makes a folder of mp3 files + album art into a youtube uplo
 
 ### building fr development
 
-this is pretty half-baked idk why anyone would want to know how as of right now but i need to write this in so i don't forget how to do this in the future. this has no dependencies if you're building on yr target platform because it uses this magic node module that downloads ffmpeg for you. will update w instructions for cross-compilation later (again also for myself lol) 
+this is pretty half-baked idk why anyone would want to know how as of right now but i need to write this in so i don't forget how to do this in the future. this has no dependencies if you're building on yr target platform because it uses this magic node module that downloads ffmpeg for you. will update w instructions for cross-compilation later (again also for myself lol)
 
 you will need to have a reasonably new version of nodejs / npm and golang 1.16
 ```bash
@@ -37,14 +37,26 @@ reference for myself dw about it yet although if youve ever used printf in your 
 %{ left brace
 %} right brace
 
-%{ }v only include characters inside {} if %v exists 
+%{ }v only include characters inside {} if %v exists
 	v is an example value. %v is rendered at the %. i do not plan on making nesting work unless
-	someone somehow comes up w a practical use case - this means that the rules listed here do not 
+	someone somehow comes up w a practical use case - this means that the rules listed here do not
 	apply to inside curly braces
 c lowercase
 C title case
 (number) pad zeroes
 	cannot be less than 3 since thats the minimum for a valid yt timestamp (0:00)
----
+```
 
+### encoding problems on windows (┬░ displaying instead of °, etc)
+this superuser answer explains it:
+https://superuser.com/questions/1584842/ffprobe-output-text-wrong-encoding/1588628#1588628
+
+> Goto Control Panel\Clock and Region
+> Click Change date, time, or number format
+> In Region window, click tab Administrative and click Change system locale...
+> Check the checkbox Beta: Use Unicode UTF-8
+> Click Ok and restart computer.
+
+i had to search "region" 2 find the setting
+---
 # SORRY FOR MAKING AN ELECTRON APP !!!!!!!!!!!!!!!
