@@ -1,44 +1,52 @@
 package main
 
 import (
-    "errors"
-    "os"
-    "path"
-    "regexp" 
-    "sort"
-    "strconv"   
-    "strings"
-    "time"
+	"errors"
+	"os"
+	"path"
+	"regexp"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
 
-    "github.com/Akumzy/ipc"
-    "github.com/dhowden/tag"
-    "github.com/gabriel-vasile/mimetype"
-    ffmpeg "github.com/modfy/fluent-ffmpeg"
+	"github.com/Akumzy/ipc"
+	"github.com/dhowden/tag"
+	"github.com/gabriel-vasile/mimetype"
+	ffmpeg "github.com/modfy/fluent-ffmpeg"
 )
 
+const alphabet = "abcdefghijklmnopqrstuvwxyz"
+
 func getTags(channel *ipc.IPC, formData FormData, ffprobePath string) VideoData {
-    ffmpeg.SetFfProbePath(ffprobePath)
-    formData = validatePaths(channel, formData)
+	ffmpeg.SetFfProbePath(ffprobePath)
+	formData = validatePaths(channel, formData)
 
-    setLabel(channel, "reading " + path.Base(formData.albumDirectory) + "..")
-    albumDirectoryFile, err := os.Open(formData.albumDirectory); if err != nil { panic(err) }
-    files, err := albumDirectoryFile.Readdirnames(-1); if err != nil { panic(err) }
-    
-    discTracks := make(map[uint32]uint32)
-    audioFiles := []AudioFile{}
-    imageFiles := []string{}
+	setLabel(channel, "reading "+path.Base(formData.albumDirectory)+"..")
+	albumDirectoryFile, err := os.Open(formData.albumDirectory)
+	if err != nil {
+		panic(err)
+	}
+	files, err := albumDirectoryFile.Readdirnames(-1)
+	if err != nil {
+		panic(err)
+	}
 
-    // wrote this myself :D i'll probably have to change it sometime
-    trackRe := regexp.MustCompile(`^([0-9]+|[A-Za-z]{1,2}|[0-9]+[A-Za-z]|)(-| - |_| |)([0-9]+|[A-Za-z])(. | |_)`)
+	discTracks := make(map[int]int)
+	audioFiles := []AudioFile{}
+	imageFiles := []string{}
 
-    for _, base := range files {
+	// wrote this myself :D i'll probably have to change it sometime
+	trackRe := regexp.MustCompile(`^([0-9]+|[A-Za-z]{1,2}|[0-9]+[A-Za-z]|)(-| - |_| |)([0-9]+|[A-Za-z])(. | |_)`)
+
+	for _, base := range files {
 		if strings.HasPrefix(base, ".CONCAT--[BIT_LY9099]--") {
 			os.Remove(path.Join(formData.albumDirectory, base)) // clean up after yrself
 			continue
 		}
-        setLabel(channel, "reading " + base + "..")
-        file := path.Join(formData.albumDirectory, base)
-        mime, err := mimetype.DetectFile(file)
+		setLabel(channel, "reading "+base+"..")
+		file := path.Join(formData.albumDirectory, base)
+		mime, err := mimetype.DetectFile(file)
 		if err != nil {
 			if !strings.HasSuffix(errors.Unwrap(err).Error(), "The handle is invalid.") {
 				panic(err)
@@ -46,202 +54,230 @@ func getTags(channel *ipc.IPC, formData FormData, ffprobePath string) VideoData 
 			continue
 		}
 
-        switch strings.Split(mime.String(), "/")[0] {
-        case "audio":
-            var disc, track uint32
-            var artist, albumArtist, title, album string
-            ffprobeData, err := ffmpeg.Probe(file); if err != nil { panic(err) }
-            metadata := getMetadata(file)
-            
-            if artist = metadata.Artist(); artist == "" {
-                artist = "[unknown artist]"
-            }
-            
-            if albumArtist = metadata.AlbumArtist(); albumArtist == "" {
-                albumArtist = "[unknown artist]"
-            }
+		switch strings.Split(mime.String(), "/")[0] {
+		case "audio":
+			var disc, track int
+			var artist, albumArtist, title, album string
+			ffprobeData, err := ffmpeg.Probe(file)
+			if err != nil {
+				panic(err)
+			}
+			metadata := getMetadata(file)
 
-            if title = metadata.Title(); title == "" {
-                title = "[untitled]"
-            }
+			if artist = metadata.Artist(); artist == "" {
+				artist = "[unknown artist]"
+			}
 
-            if album = metadata.Album(); album == "" {
-                album = "[untitled]"
-            }
+			if albumArtist = metadata.AlbumArtist(); albumArtist == "" {
+				albumArtist = "[unknown artist]"
+			}
 
-            year := strconv.Itoa(metadata.Year())
-            cover := metadata.Picture()
+			if title = metadata.Title(); title == "" {
+				title = "[untitled]"
+			}
 
-            seconds_, err := strconv.ParseFloat(ffprobeData["format"].(map[string]interface{})["duration"].(string), 32); if err != nil { panic(err) }
-            seconds := float32(seconds_)
+			if album = metadata.Album(); album == "" {
+				album = "[untitled]"
+			}
 
-            // frankly i dont trust the tag library's assesment of track / disc numbers SORRY
-            if (ffprobeData["format"].(map[string]interface{})["tags"].(map[string]interface{})["disc"] != nil) {
-                disc = parseTrackTag(ffprobeData["format"].(map[string]interface{})["tags"].(map[string]interface{})["disc"].(string))
-            } else { disc = 1 }
+			year := strconv.Itoa(metadata.Year())
+			cover := metadata.Picture()
 
-            if (ffprobeData["format"].(map[string]interface{})["tags"].(map[string]interface{})["track"] != nil) {
-                track = parseTrackTag(ffprobeData["format"].(map[string]interface{})["tags"].(map[string]interface{})["track"].(string))
-            } else {
-                if !trackRe.MatchString(file) {
-                    panic(errors.New("please make sure your filenames start with a track number" +
-                        "if they are not tagged properly (which would be preferrable). for exact" + 
-                        "specifications as to what does and does not get detected as a track" + 
-                        "number see https://github.com/sunglasseds/album2video"))
-                }
-                track, disc = parseTrack(file, trackRe)
-            }
-            
-            if dt, ok := discTracks[disc]; ok {
-                if dt < track {
-                    discTracks[disc] = track                
-                }
-            } else {
-                discTracks[disc] = track
-            }
+			seconds_, err := strconv.ParseFloat(ffprobeData["format"].(map[string]interface{})["duration"].(string), 32)
+			if err != nil {
+				panic(err)
+			}
+			seconds := float32(seconds_)
 
-            audioFiles = append(audioFiles, AudioFile{
-                filename: file,
-                artist: artist,
-                albumArtist: albumArtist,
-                title: title,
-                album: album,
-                year: year,
-                track: track,
-                disc: disc,
-                time: time.Duration(seconds * float32(time.Second)),
-                cover: cover,
-                discTracks: &discTracks,
-            })
+			// frankly i dont trust the tag library's assesment of track / disc numbers SORRY
+			if ffprobeData["format"].(map[string]interface{})["tags"].(map[string]interface{})["disc"] != nil {
+				disc = parseTrackTag(ffprobeData["format"].(map[string]interface{})["tags"].(map[string]interface{})["disc"].(string))
+			} else {
+				disc = 1
+			}
+
+			if ffprobeData["format"].(map[string]interface{})["tags"].(map[string]interface{})["track"] != nil {
+				track = parseTrackTag(ffprobeData["format"].(map[string]interface{})["tags"].(map[string]interface{})["track"].(string))
+			} else {
+				if !trackRe.MatchString(file) {
+					panic(errors.New("please make sure your filenames start with a track number" +
+						"if they are not tagged properly (which would be preferrable). for exact" +
+						"specifications as to what does and does not get detected as a track" +
+						"number see https://github.com/sunglasseds/album2video"))
+				}
+				track, disc = parseTrack(file, trackRe)
+			}
+
+			if dt, ok := discTracks[disc]; ok {
+				if dt < track {
+					discTracks[disc] = track
+				}
+			} else {
+				discTracks[disc] = track
+			}
+
+			audioFiles = append(audioFiles, AudioFile{
+				filename:    file,
+				artist:      artist,
+				albumArtist: albumArtist,
+				title:       title,
+				album:       album,
+				year:        year,
+				track:       track,
+				disc:        disc,
+				time:        time.Duration(seconds * float32(time.Second)),
+				cover:       cover,
+				discTracks:  &discTracks,
+			})
 			Println(channel, title)
 
-            case "image":
-                imageFiles = append(imageFiles, file)
-        }
-    }    
+		case "image":
+			imageFiles = append(imageFiles, file)
+		}
+	}
 
-    setLabel(channel, "ordering audio files..")
-    sort.Sort(byTrack(audioFiles))
-    if len(audioFiles) < 1 {
-    	panic(errors.New("you need sound files in the album directory"))
-    }
+	setLabel(channel, "ordering audio files..")
+	sort.Sort(byTrack(audioFiles))
+	if len(audioFiles) < 1 {
+		panic(errors.New("you need sound files in the album directory"))
+	}
 
-    return VideoData{
-        formData: formData,
-        audioFiles: audioFiles,
-        imageFiles: imageFiles,
-        discTracks: discTracks,
-    }
+	return VideoData{
+		formData:   formData,
+		audioFiles: audioFiles,
+		imageFiles: imageFiles,
+		discTracks: discTracks,
+	}
 }
 
 func validatePaths(channel *ipc.IPC, formData FormData) FormData {
-    setLabel(channel, "validating album path..")
-    stats, err := os.Stat(formData.albumDirectory); if err != nil { panic(err) }
+	setLabel(channel, "validating album path..")
+	stats, err := os.Stat(formData.albumDirectory)
+	if err != nil {
+		panic(err)
+	}
 
-    if stats.Mode().IsRegular() {
-        formData.albumDirectory = path.Dir(formData.albumDirectory)
-    } else if stats.IsDir() { /* pass */ } else {
-        panic(errors.New("album directory is not a file or directory"))
-    }
+	if stats.Mode().IsRegular() {
+		formData.albumDirectory = path.Dir(formData.albumDirectory)
+	} else if stats.IsDir() { /* pass */
+	} else {
+		panic(errors.New("album directory is not a file or directory"))
+	}
 
-    if !formData.extractCover {
-        setLabel(channel, "validating cover path..")
-        stats, err = os.Stat(formData.coverPath); if err != nil { panic(err) }
-		
-        if stats.Mode().IsRegular() { /* pass */ } else {
-            panic(errors.New(formData.coverPath + " is not a file"))
-        }
-    }
+	if !formData.extractCover {
+		setLabel(channel, "validating cover path..")
+		stats, err = os.Stat(formData.coverPath)
+		if err != nil {
+			panic(err)
+		}
 
-    setLabel(channel, "validating output path..")
-    stats, err = os.Stat(formData.outputPath); if err != nil { 
+		if stats.Mode().IsRegular() { /* pass */
+		} else {
+			panic(errors.New(formData.coverPath + " is not a file"))
+		}
+	}
+
+	setLabel(channel, "validating output path..")
+	stats, err = os.Stat(formData.outputPath)
+	if err != nil {
 		if os.IsNotExist(err) {
 			f, err := os.Create(formData.outputPath)
-			if err != nil { panic(err) }
+			if err != nil {
+				panic(err)
+			}
 			f.Close()
 		} else {
 			panic(err)
 		}
 	}
 
-    if formData.separateFiles && stats.Mode().IsRegular() {
-        formData.outputPath = path.Dir(formData.outputPath)
-    } else if (!formData.separateFiles) && stats.IsDir() {
-        formData.outputPath = path.Join(formData.outputPath, "out.mp4")
-    } else if formData.separateFiles == stats.IsDir() { /* pass */ } else {
-        panic(errors.New(formData.outputPath + " is not a file or directory"))
-    }
+	if formData.separateFiles && stats.Mode().IsRegular() {
+		formData.outputPath = path.Dir(formData.outputPath)
+	} else if (!formData.separateFiles) && stats.IsDir() {
+		formData.outputPath = path.Join(formData.outputPath, "out.mp4")
+	} else if formData.separateFiles == stats.IsDir() { /* pass */
+	} else {
+		panic(errors.New(formData.outputPath + " is not a file or directory"))
+	}
 	return formData
 }
 
-func getMetadata(filename string) (tag.Metadata) {
-    f, err := os.Open(filename); if err != nil { panic(err) }
-    m, err := tag.ReadFrom(f); if err != nil { panic(err) }
-    err = f.Close(); if err != nil { panic(err) }
-    return m
+func getMetadata(filename string) tag.Metadata {
+	f, err := os.Open(filename)
+	if err != nil {
+		panic(err)
+	}
+	m, err := tag.ReadFrom(f)
+	if err != nil {
+		panic(err)
+	}
+	err = f.Close()
+	if err != nil {
+		panic(err)
+	}
+	return m
 }
 
-func parseTrackTag(v string) uint32 {
-    t, err := strconv.ParseUint(strings.Split(v, "/")[0], 10, 32)
-    if err != nil { panic(err) }; return uint32(t)
+func parseTrackTag(v string) int {
+	t, err := strconv.ParseInt(strings.Split(v, "/")[0], 10, 32)
+	if err != nil {
+		panic(err)
+	}
+	return int(t)
 }
 
-func parseTrack(filename string, trackRe *regexp.Regexp) (d, t uint32) {
-    submatches := trackRe.FindSubmatch([]byte(filename))
-    discSubmatch := string(submatches[1])
-    trackSubmatch := string(submatches[3])
-    
-    d_, err := strconv.ParseUint(discSubmatch, 10, 32)
-    if err != nil {
-        d = uint32(1)
-        switch len(discSubmatch) {
-        case 1:
-            d += uint32(strings.Index(strings.ToLower(string(discSubmatch[0])), "abcdefghijklmnopqrstuvwxyz"))
-            fallthrough
-        case 2:
-            d += uint32(strings.Index(strings.ToLower(string(discSubmatch[1])), "abcdefghijklmnopqrstuvwxyz")*26)
-        default:
-            panic(err)
-        }
-    } else {
-    	d = uint32(d_)
-    }
+func parseTrack(filename string, trackRe *regexp.Regexp) (int, int) {
+	submatches := trackRe.FindSubmatch([]byte(filename))
+	discSubmatch := string(submatches[1])
+	trackSubmatch := string(submatches[3])
 
-    t_, err := strconv.ParseUint(trackSubmatch, 10, 32)
-    if err != nil {
-        if len(trackSubmatch) != 1 {
-            panic(err)
-        }
-        t = uint32(strings.Index(strings.ToLower(string(trackSubmatch[0])), "abcdefghijklmnopqrstuvwxyz") + 1)
-    } else {
-    	t = uint32(t_)
-    }
+	d, err := strconv.ParseInt(discSubmatch, 10, 32)
+	if err != nil {
+		d = 1
+		switch len(discSubmatch) {
+		case 1:
+			d += int64(strings.Index(strings.ToLower(string(discSubmatch[0])), alphabet))
+			fallthrough
+		case 2:
+			d += int64(strings.Index(strings.ToLower(string(discSubmatch[1])), alphabet) * 26)
+		default:
+			panic(err)
+		}
+	}
 
-    return
+	t, err := strconv.ParseInt(trackSubmatch, 10, 32)
+	if err != nil {
+		if len(trackSubmatch) != 1 {
+			panic(err)
+		}
+		t = int64(strings.Index(strings.ToLower(string(trackSubmatch[0])), alphabet) + 1)
+	}
+
+	return int(d), int(t)
 }
 
 // le []AudioFile sorting interface
 type byTrack []AudioFile
 
 func (s byTrack) Len() int {
-    return len(s)
+	return len(s)
 }
 
 func (s byTrack) Swap(i, j int) {
-    s[i], s[j] = s[j], s[i]
+	s[i], s[j] = s[j], s[i]
 }
 
 func (s byTrack) Less(i, j int) bool {
-    discTracks := s[i].discTracks
-    iOverall := overallTrackNumber(s[i].track, s[i].disc, discTracks)
-    jOverall := overallTrackNumber(s[j].track, s[j].disc, discTracks)
-    return iOverall < jOverall
+	discTracks := s[i].discTracks
+	iOverall := overallTrackNumber(s[i].track, s[i].disc, discTracks)
+	jOverall := overallTrackNumber(s[j].track, s[j].disc, discTracks)
+	return iOverall < jOverall
 }
 
-func overallTrackNumber(track, disc uint32, discTracks *map[uint32]uint32) (n uint32) {
-    n = track
-    for i := uint32(1); i <= disc-1; i++ {
-        n += (*discTracks)[i]
-    }
-    return n
+func overallTrackNumber(track, disc int, discTracks *map[int]int) (n int) {
+	n = track
+	for i := 1; i <= disc-1; i++ {
+		n += (*discTracks)[i]
+	}
+	return n
 }

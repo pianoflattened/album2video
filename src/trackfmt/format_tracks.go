@@ -2,29 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
-	"math"
-	"strings"
-	
+
 	"github.com/Akumzy/ipc"
-)
-
-type Timestamp struct {
-	Artist 		 string `json:"artist"`
-	AlbumArtist  string `json:"albumArtist"`
-	Title 		 string `json:"title"`
-	Time 		 string `json:"time"`
-	Disc		 int    `json:"disc"`
-	Track		 int    `json:"track"`
-	OverallTrack int	`json:"overallTrack"`
-}
-
-type FieldCase int
-
-const (
-	raw FieldCase = iota
-	lower
-	title
 )
 
 /*
@@ -36,166 +15,98 @@ const (
 func formatTracks(channel *ipc.IPC, fmtString string, tracks string) (o string) {
 	var timestamps []Timestamp
 	json.Unmarshal([]byte(tracks), &timestamps)
-	
-	var dominantArtist string
-	artists 	 	   := make(map[string]int)
-	albumArtists 	   := make(map[string]int)
-	albumArtistUnknown := true
-	
-	for _, track := range timestamps {
-		if _, ok := artists[track.Artist]; ok {
-			artists[track.Artist] += 1
-		} else {
-			artists[track.Artist] = 1
-		}
-		
-		if _, ok := albumArtists[track.AlbumArtist]; ok {
-			albumArtists[track.AlbumArtist] += 1
-		} else {
-			albumArtists[track.AlbumArtist] = 1
-		}
-		
-		if track.AlbumArtist != "[unknown artist]" { albumArtistUnknown = false }
-	}
-	
-	variousArtists 		:= len(artists) > 1
-	variousAlbumArtists := len(albumArtists) > 1
-	
-	highestTrackCount := -1
-	if variousArtists {
-		for k, v := range artists {
-			if v > highestTrackCount {
-				highestTrackCount = v
-				dominantArtist = k
-			}
-		}
-		
-		if highestTrackCount < math.Floor((5./6.)*len(timestamps)) {
-			dominantArtist = "" // dominantArtist must take up at least 5/6ths of the tracklist to count
-		}
-	} else {
-		dominantArtist = timestamps[0].Artist
-	}
-	
-	if dominantArtist != "[unknown artist]" { albumArtistUnknown = false }
 
-	var readingArgs bool
-	var fieldCase 	FieldCase
-	var padding 	int
-	var c 			rune
-	var field 		string
-	
-	for _, track := range timestamps {
-		buf := []rune{}
-		o = ""
-		numberStart = -1
-		fieldCase = raw
-		padding = 3
-		for i, r := range fmtString {
-			if len(buf) >= 1 {
-				ind := Index(r, []rune("0123456789tsradnw%")) // add braces later
-				if 0 <= ind <= 9 {
-					if numberStart == -1 {
-						numberStart = i
-					}
-					buf = append(buf, r)
-					continue
-				} else if numberStart > -1 {
-					padding, _ = strconv.Atoi(string(buf[numberStart:]))
-				}
-				
-				if 10 <= ind <= 17 {
-					switch r {
-					case 't':
-						field = track.Title
-					case 's':
-						field = track.Time
-					case 'r':
-						field = track.Artist
-					case 'a':
-						field = track.Artist // implement discriminate artist later
-					case 'd':
-						field = track.Disc
-					case 'n':
-						field = track.OverallTrack
-					case 'w':
-						field = track.Track
-					case '%':
-						field = "\n" // wacky stuff
-					}
-					o += render(field, fieldCase, padding)
+	dominantArtist, multDiscs := calcDominantArtist(channel, timestamps)
+
+	for _, timestamp := range timestamps {
+		s := fmtState{
+			tokenBuf:       []rune{},
+			padding:        3,
+			fCase:          raw,
+			bracketBuf:     []rune{},
+			inBrackets:     false,
+			bracketEscaped: false,
+			renderRight:    false,
+			multDiscs:      multDiscs,
+		}
+		line := ""
+
+		for i, c := range fmtString {
+			if s.inBrackets {
+				if s.bracketEscaped {
+					s.appendB(c)
+					s.bracketEscaped = false
 					continue
 				}
-				
-				if r == 'c' {
-					fieldCase = lower
-					continue
-				} else if r == 'C' {
-					fieldCase = title
+
+				if c == '\\' {
+					s.bracketEscaped = true
 					continue
 				}
-			}
-			
-			if len(buf) == 0 && r == '%' {
-				buf = append(buf, r)
+
+				if (c == '}' && s.renderRight) || (c == '{' && !s.renderRight) {
+					s.inBrackets = false
+					continue
+				}
+
+				if i == len(fmtString)-1 {
+					line += string(s.bracketBuf)
+					break
+				}
+
+				continue
 			}
 
-			if len(buf) >= 2 {
-				
-				switch buf[len(buf)-1] {
+			if s.length() == 1 && c == '%' { // escaped percent char
+				line += "%"
+				s.clear()
+				continue
+			}
+
+			if s.length() > 0 {
+				switch c {
 				case 't':
-					
+					line += s.render(timestamp.Title) // render auto-clears
 				case 's':
+					line += s.render(timestamp.Time, true)
 				case 'r':
+					line += s.render(timestamp.Artist)
 				case 'a':
+					line += s.render(discriminate(timestamp.Artist, dominantArtist))
 				case 'd':
+					line += s.render(timestamp.Disc, false)
 				case 'n':
+					line += s.render(timestamp.OverallTrack)
 				case 'w':
-				case '%':
-				case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-					readingNumber = true
-				case 'c':
-					charCase = "lower"
-				case 'C':
-					charCase = "title"
-				case 'r':
-					charCase = "raw"
+					line += s.render(timestamp.Track)
+				case '[':
+					s.renderRight = true
+					if s.length() == 1 {
+						s.inBrackets = true
+						continue
+					}
+				case '{':
+					s.renderRight = false
+					if s.length() == 1 {
+						s.inBrackets = true
+						continue
+					}
+				default:
+					if s.length() == 1 {
+						s.clear() // consume the next character bc im evil
+						continue
+					}
 				}
-				buf = append(buf, r)
 			}
-			
-			if r == ' ' {
-				buf = []rune{}
+
+			if c == '%' {
+				s.append(c)
+				continue
 			}
+
+			line += string([]rune{c})
 		}
+		o += line + "\n"
 	}
-	return "lol"
-}
-
-func render(field string, fieldCase FieldCase, padding int) string {
-	if padding > 3 {
-		// lol not doing this today
-	}
-
-	switch FieldCase {
-	case raw:
-		return field
-	case lower:
-		return strings.ToLower(field)
-	case title:
-		return field // also not doing this >:)
-	}
-}
-
-func Println(ipc *ipc.IPC, msg interface{}) {
-    ipc.Send("log", fmt.Sprintf("%v", msg))
-}
-
-func Index(r rune, buf []rune) int {
-	for i, e := range buf {
-		if e == r {
-			return i
-		}
-	}
-	return -1
+	return
 }

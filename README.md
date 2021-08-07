@@ -37,14 +37,13 @@ reference for myself dw about it yet although if youve ever used printf in your 
 %{ left brace
 %} right brace
 
-%{ }v only include characters inside {} if %v exists
-	v is an example value. %v is rendered at the %. i do not plan on making nesting work unless
-	someone somehow comes up w a practical use case - this means that the rules listed here do not
-	apply to inside curly braces
+%{ ]v only include characters inside {] / [} if %v exists
+	v is an example value. %v is rendered on the side that the curly brace is on. i do not plan on
+	making nesting work unless someone somehow comes up w a practical use case - this means that
+	the rules listed here do not apply to inside curly braces. \ is used to escape inside braces
 c lowercase
 C title case
 (number) pad zeroes
-	cannot be less than 3 since thats the minimum for a valid yt timestamp (0:00)
 ```
 
 ### encoding problems on windows (┬░ displaying instead of °, etc)
