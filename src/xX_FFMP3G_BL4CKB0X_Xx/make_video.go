@@ -31,7 +31,7 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string) string 
 			Time:         durationToString(length),
 			Disc:         f.disc,
 			Track:        f.track,
-			OverallTrack: i,
+			OverallTrack: i + 1,
 		})
 
 		fileListContents += "file '" + strings.ReplaceAll(f.filename, `'`, `'\''`) + "'\n"
