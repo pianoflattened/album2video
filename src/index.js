@@ -76,7 +76,7 @@ form.separateVideos.addEventListener('change', function() {
 		browsetype = "path";
 		form.outputPath.value = outpath;
 	}
-	updateSubmitBtn(form); // fixes a bug where checking the separate videos box breaks the submit 
+	updateSubmitBtn(form); // fixes a bug where checking the separate videos box breaks the submit
 						   // button because the event fire off in an order i cant control
 });
 
@@ -93,15 +93,15 @@ submitBtn.addEventListener('click', function() {
 	if (!ack.endsWith(path.sep)) {
 		ack += path.sep
 	}
-	
+
 	let formData = [
-        ack, 
+        ack,
         form.coverPath.value,
         form.extractCover.checked,
-        form.separateVideos.checked, 
+        form.separateVideos.checked,
         form.outputPath.value
     ];
-	
+
 	progressBar = new ProgressBar(document.querySelector(".progress-container"));
     progressBar.makeIndeterminate();
     progressBar.setLabel('starting subprocess..');
@@ -111,7 +111,7 @@ submitBtn.addEventListener('click', function() {
 const collapseFormatting = document.getElementById('collapse-formatting');
 collapseFormatting.addEventListener('click', function() {
 	ipcRenderer.send('resize-window', {
-		btnclass: collapseFormatting.className, 
+		btnclass: collapseFormatting.className,
 		offsetHeight: process.platform == "win32" ? 28 : 27
 	});
 });
@@ -141,4 +141,8 @@ ipcRenderer.on("set-complete", function(event) {
 
 ipcRenderer.on("set-error", function(event, code) {
 	progressBar.error(code).then(_ => submitBtn.removeAttribute("disabled"));
+});
+
+ipcRenderer.on("timestamps", function(event, timestamps) {
+	document.getElementById("timestamps").value = timestamps;
 });
