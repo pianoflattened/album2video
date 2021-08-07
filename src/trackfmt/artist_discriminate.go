@@ -6,7 +6,7 @@ import (
 	"github.com/Akumzy/ipc"
 )
 
-func calcDominantArtist(channel *ipc.IPC, timestamps []Timestamp) (string, bool) {
+func calcDominantArtist(channel *ipc.IPC, timestamps []JSONTimestamp) (string, bool) {
 
 	var dominantArtist string
 	artists := make(map[string]int)

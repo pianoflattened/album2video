@@ -26,17 +26,26 @@ slap it into a site like https://regexr.com/ and type in track names to see if y
 
 ### tracklist formatting
 reference for myself dw about it yet although if youve ever used printf in your life most of this should make sense
-```
-%t title
-%s timestamp
+```%s song
+%t timestamp
 %r artist (indiscriminate)
 %a artist (discriminate)
 %d disc
 %n track number (overall)
 %w track number (within disc)
 %% percent
+%{ left brace
+%} right brace
+
+%{ ]v only include characters inside {] / [} if %v exists
+	v is an example value. %v is rendered on the side that the curly brace is on. i do not plan on
+	making nesting work unless someone somehow comes up w a practical use case - this means that
+	the rules listed here do not apply to inside curly braces. \ is used to escape inside braces
+c lowercase
+C title case
+(number) pad zeroes
 ```
-example (the format i use): `%t - %s`
+example (the format i use): `%[ - }ca%cs - %3ct`
 
 ### encoding problems on windows (┬░ displaying instead of °, etc)
 this superuser answer explains it:

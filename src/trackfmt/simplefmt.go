@@ -2,9 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"reflect"
 	"regexp"
-	"strconv"
-	"strings"
+	"unicode/utf8"
 
 	"github.com/Akumzy/ipc"
 )
@@ -21,7 +22,7 @@ import (
 */
 
 func formatTracks(channel *ipc.IPC, fmtString string, tracks string) string {
-	var timestamps []Timestamp
+	var timestamps []JSONTimestamp
 	json.Unmarshal([]byte(tracks), &timestamps)
 	o := ""
 
@@ -30,24 +31,63 @@ func formatTracks(channel *ipc.IPC, fmtString string, tracks string) string {
 		Println(channel, i)
 	}
 
-	for _, timestamp := range timestamps {
+	/*
+	   \% - initial percent
+	   (([cC])?(\d+)|(\d+)([cC])?|([cC]))? - case/padding
+	   (
+	   	(\[)(([^}]|\\.)+)?\} - ifexists right
+	   	|
+	   	(\{)(([^}]|\\.)+)?\] - ifexists left
+	   )?
+	   ([tsradnw\%]) - character
+
+	*/
+
+	// wacky stuff
+	re := regexp.MustCompile(`\%(([cC])?(\d+)|(\d+)([cC])?|([cC]))?((\[)(([^}]|\\.)+)?\}|(\{)(([^}]|\\.)+)?\])?([tsradnw\%])`)
+	matches := re.FindAllStringSubmatch(fmtString, -1)
+
+	for _, jtimestamp := range timestamps {
+		timestamp := jtimestamp.toTimestamp()
+		line := ""
+		r := renderOptions{raw, -1, false, "", '_'}
+		for _, match := range matches {
+			if match[14] == "%" {
+				line += match[14]
+				continue
+			}
+			r.mode, _ = utf8.DecodeRuneInString(match[14])
+
+			switch firstNonZero(match[2], match[5], match[6]).(string) {
+			case "c":
+				r.fCase = lower
+			case "C":
+				r.fCase = title
+			}
+
+			r.padding, _ = firstNonZero(match[3], match[4]).(int)
+			r.ifExistsRight = firstNonZero(match[8], match[11]).(string) == "["
+			r.ifExists = firstNonZero(match[9], match[12]).(string)
+
+			line += r.render(timestamp)
+		}
 		Println(channel, timestamp)
-		line := fmtString
-		line = replaceVal(line, timestamp.Title, "t")
-		line = replaceVal(line, timestamp.Time, "s")
-		line = replaceVal(line, timestamp.Artist, "r")
-		line = replaceVal(line, discriminate(timestamp.Artist, dominantArtist), "a")
-		line = replaceVal(line, strconv.Itoa(timestamp.Disc), "d")
-		line = replaceVal(line, strconv.Itoa(timestamp.OverallTrack), "n")
-		line = replaceVal(line, strconv.Itoa(timestamp.Track), "w")
-		strings.ReplaceAll(string(line), "%%", "%")
-		o += string(line) + "\n"
+		o += line + "\n"
 	}
 	Println(channel, o)
 	return o
 }
 
-func replaceVal(line, val, letter string) string {
-	re := regexp.MustCompile(`(^|[^%])(\%` + letter + `)`)
-	return string(re.ReplaceAll([]byte(line), []byte("${1}"+val)))
+func firstNonZero(n interface{}, m ...interface{}) interface{} {
+	v := reflect.ValueOf(n)
+	if len(m) <= 1 {
+		if v.IsZero() {
+			return fmt.Sprintf("%v", m)
+		}
+		return fmt.Sprintf("%v", n)
+	}
+	if v.IsZero() {
+		return firstNonZero(m[0], m[1:])
+	}
+	return ""
 }
