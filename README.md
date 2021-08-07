@@ -45,7 +45,7 @@ c lowercase
 C title case
 (number) pad zeroes
 ```
-example (the format i use): `%[ - }ca%cs - %3ct`
+example (the format i use): `%c[ - }a%cs - %3ct`
 
 ### encoding problems on windows (┬░ displaying instead of °, etc)
 this superuser answer explains it:

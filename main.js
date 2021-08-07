@@ -1,6 +1,7 @@
 // TODO: set or remove app icon
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
 const BezierEasing = require('bezier-easing');
+const child_process = require('child_process');
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 const ffprobePath = require('@ffprobe-installer/ffprobe').path;
 const IPC = require('ipc-node-go')
@@ -143,21 +144,37 @@ ipcMain.on("make-video", function(event, jsonData) {
 ipcMain.on("timestamp-format", function(event, data) {
 	let format = data.format;
 	let timestamps = data.timestamps;
+	let trackfmtPath;
 
 	if (process.platform == "win32") {
-		trackfmt = new IPC('./bin/trackfmt.exe');
+		trackfmtPath = "./bin/trackfmt.exe";
+		// trackfmt = new IPC('./bin/trackfmt.exe');
 	} else { // (process.platform == "linux")
-		trackfmt = new IPC('./bin/trackfmt');
+		// trackfmt = new IPC('./bin/trackfmt');
+		trackfmtPath = "./bin/trackfmt";
 	}
-	trackfmt.init([format, timestamps]);
-	trackfmt.on("log", console.log);
-	trackfmt.on("error", console.error);
-	trackfmt.on("close", (code) => console.log("trackfmt closed with " + code));
-	trackfmt.on("result", data => {
-		console.log(data);
-		event.reply("timestamps", data);
-		trackfmt.kill();
+	var trackfmt = child_process.spawn(trackfmtPath, [format, timestamps]);
+	trackfmt.stdout.on('data', data => {
+		event.reply("timestamps", data.toString());
 	});
+
+	trackfmt.stderr.on('data', data => {
+		console.log(data.toString());
+	});
+
+	trackfmt.on("close", code => {
+		console.log("trackfmt closed with " + code);
+	});
+
+	// trackfmt.init([format, timestamps]);
+	// trackfmt.on("log", console.log);
+	// trackfmt.on("error", console.error);
+	// trackfmt.on("close", (code) => console.log("trackfmt closed with " + code));
+	// trackfmt.on("result", data => {
+	// 	console.log(data);
+	// 	trackfmt.kill();
+	// 	event.reply("timestamps", data);
+	// });
 });
 
 // DONT LOOK DOWN HERE THIS PART IS REALLY BAD
