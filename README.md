@@ -58,5 +58,6 @@ https://superuser.com/questions/1584842/ffprobe-output-text-wrong-encoding/15886
 > Click Ok and restart computer.
 
 i had to search "region" 2 find the setting
+
 ---
 # SORRY FOR MAKING AN ELECTRON APP !!!!!!!!!!!!!!!
