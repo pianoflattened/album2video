@@ -51,15 +51,11 @@ C title case
 this superuser answer explains it:
 https://superuser.com/questions/1584842/ffprobe-output-text-wrong-encoding/1588628#1588628
 
-> Goto Control Panel\Clock and Region
-
-> Click Change date, time, or number format
-
-> In Region window, click tab Administrative and click Change system locale...
-
-> Check the checkbox Beta: Use Unicode UTF-8
-
-> Click Ok and restart computer.
+> Goto Control Panel\Clock and Region <br>
+> Click Change date, time, or number format <br>
+> In Region window, click tab Administrative and click Change system locale... <br>
+> Check the checkbox Beta: Use Unicode UTF-8 <br>
+> Click Ok and restart computer. <br>
 
 i had to search "region" 2 find the setting
 
