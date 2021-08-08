@@ -3,7 +3,10 @@
 gui application that makes a folder of sound files (any format that ffmpeg likes) + album art into a youtube-uploadable format
 
 ### setting ffmpeg/ffprobe paths
-JUST KIDDING i saw you grimace it was pretty funny makes you look like a cartoon character when you do that. i use a magic node library that automatically downloads binaries depending on ur os (url here) and i built it with those. if you want to use a different version / have some modified version of ffmpeg bc youre a sociopath then build from source i guess
+JUST KIDDING i saw you grimace it was pretty funny makes you look like a cartoon character when you do that. i use a magic node library that automatically downloads binaries depending on ur os (linked below) and i built it with those. if you want to use a different version / have some modified version of ffmpeg bc youre a sociopath then build from source i guess
+
+https://github.com/kribblo/node-ffmpeg-installer
+https://github.com/SavageCore/node-ffprobe-installer
 
 ### building from source
 
