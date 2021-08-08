@@ -2,11 +2,15 @@ package main
 
 import (
 	"strings"
-	"unicode"
-
-	whatlang "github.com/abadojack/whatlanggo"
 )
 
+func TitleCase(s string) string {
+	return strings.Title(s) // fake
+}
+
+// i will write a real one later
+
+/*
 var nocapEng = []string{"a", "an", "the", "and", "but", "or", "nor", "for", "yet", "so", "versus", "v.", "vs.", "etc.", "et", "cetera", "as", "by", "in", "on", "to", "n'", "o'"}
 var nocapTurk = []string{"ve", "ile", "ya", "veya", "yahut", "ki", "da", "de"}
 var qPart = []string{"mı", "mi", "mu", "mü"}
@@ -131,7 +135,7 @@ func TitleCase(s string, selfcall bool) string {
 					}
 					fallthrough
 				default:
-					if i == 0 && !selfcall { /* pass */
+					if i == 0 && !selfcall { // pass
 					} else {
 						words[i] = strings.ToLower(first + rest)
 						continue
@@ -157,4 +161,4 @@ func TitleCase(s string, selfcall bool) string {
 	}
 
 	return strings.Join(words, " ")
-}
+}*/

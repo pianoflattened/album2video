@@ -1,13 +1,18 @@
 package main
 
 import (
+	"crypto/md5"
 	"encoding/json"
-	"fmt"
 	"reflect"
 	"regexp"
+	"strconv"
+	"strings"
 	"unicode/utf8"
+
+	"github.com/kelindar/binary" // sorry
 )
 
+var err error // line 58 :(
 /*
    \% - initial percent
    (([cC])?(\d+)|(\d+)([cC])?|([cC]))? - case/padding
@@ -17,49 +22,51 @@ import (
 	(\{)(([^}]|\\.)+)?\] - ifexists left
    )?
    ([tsradnw\%]) - mode
-
 */
 
-func formatTracks( /*channel *ipc.IPC,*/ fmtString string, tracks string) string {
+func formatTracks(fmtString string, tracks string) string {
 	var timestamps []JSONTimestamp
 	json.Unmarshal([]byte(tracks), &timestamps)
 	o := ""
 
-	dominantArtist, multDiscs := calcDominantArtist( /*channel,*/ timestamps)
+	dominantArtist, multDiscs := calcDominantArtist(timestamps)
 
 	re := regexp.MustCompile(`\%(([cC])?(\d+)|(\d+)([cC])?|([cC]))?((\[)(([^}]|\\.)+)?\}|(\{)(([^}]|\\.)+)?\])?([tsradnw\%])`)
-	matches := re.FindAllStringSubmatch(fmtString, -1)
-	println(fmt.Sprintf("%v", matches))
+	matches := removeDuplicates(re.FindAllStringSubmatch(fmtString, -1))
 
 	for _, jtimestamp := range timestamps {
 		timestamp := jtimestamp.toTimestamp()
-		println(fmt.Sprintf("%v", timestamp))
-		line := ""
+		line := fmtString
 		r := renderOptions{raw, -1, false, "", '_', dominantArtist, multDiscs}
 		for _, match := range matches {
+			field := ""
 			if match[14] == "%" {
-				line += match[14]
-			} else {
-				r.mode, _ = utf8.DecodeRuneInString(match[14])
-
-				switch firstNonZero(match[2], match[5], match[6]).(string) {
-				case "c":
-					r.fCase = lower
-				case "C":
-					r.fCase = title
-				}
-
-				r.padding, _ = firstNonZero(match[3], match[4]).(int)
-				r.ifExistsRight = firstNonZero(match[8], match[11]).(string) == "["
-				r.ifExists = firstNonZero(match[9], match[12]).(string)
-
-				line += r.render(timestamp) + "\n"
+				// field = match[14]
+				continue
 			}
+			r.mode, _ = utf8.DecodeRuneInString(match[14])
+
+			switch firstNonZero(match[2], match[5], match[6]).(string) {
+			case "c":
+				r.fCase = lower
+			case "C":
+				r.fCase = title
+			}
+
+			r.padding, err = strconv.Atoi(firstNonZero(match[3], match[4]).(string))
+			if err != nil {
+				r.padding = -1
+			}
+			r.ifExistsRight = firstNonZero(match[8], match[11]).(string) == "["
+			r.ifExists = firstNonZero(match[9], match[12]).(string)
+
+			field = r.render(timestamp)
+			line = strings.ReplaceAll(line, match[0], field)
 		}
-		println(fmt.Sprintf("%v", timestamp))
-		o += line
+		// i think this is the more robust way of doing it? skip over escaped % matches and then go back and fix them all?? may have to fix
+		line = strings.ReplaceAll(line, "%%", "%")
+		o += line + "\n"
 	}
-	println(fmt.Sprintf("%v", o))
 	return o
 }
 
@@ -67,12 +74,31 @@ func firstNonZero(n interface{}, m ...interface{}) interface{} {
 	v := reflect.ValueOf(n)
 	if len(m) <= 1 {
 		if v.IsZero() {
-			return fmt.Sprintf("%v", m)
+			return m[0]
 		}
-		return fmt.Sprintf("%v", n)
+		return n
 	}
 	if v.IsZero() {
-		return firstNonZero(m[0], m[1:])
+		return firstNonZero(m[0], m[1:]...)
 	}
 	return ""
+}
+
+func removeDuplicates(a [][]string) (b [][]string) {
+	keys := make(map[string]bool)
+	b = [][]string{}
+	for _, e := range a {
+		g, err := binary.Marshal(e)
+		if err != nil {
+			panic(err)
+		}
+		sum := md5.Sum(g)
+		if _, ok := keys[string(sum[:])]; !ok {
+			keys[string(sum[:])] = true
+			c := make([]string, len(e))
+			copy(c, e)
+			b = append(b, c)
+		}
+	}
+	return b
 }

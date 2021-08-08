@@ -20,12 +20,6 @@ type renderOptions struct {
 func (r renderOptions) render(t Timestamp) string {
 	s := r.valFromMode(t)
 
-	if r.fCase == lower { // case
-		s = strings.ToLower(s)
-	} else if r.fCase == title {
-		s = TitleCase(s, false)
-	}
-
 	if strings.IndexRune("tdnw", r.mode) > -1 { // padding
 		if r.mode == 't' {
 			s = pad(strings.ReplaceAll(s, ":", ""), int(math.Max(float64(r.padding), 3)))
@@ -54,6 +48,12 @@ func (r renderOptions) render(t Timestamp) string {
 		}
 	}
 
+	if r.fCase == lower { // case
+		s = strings.ToLower(s)
+	} else if r.fCase == title {
+		s = TitleCase(s)
+	}
+
 	return s
 }
 
@@ -69,7 +69,7 @@ func (r renderOptions) valFromMode(t Timestamp) string {
 }
 
 func pad(s string, a int) string {
-	for len(s) > a {
+	for len(s) < a {
 		s = "0" + s
 	}
 	return s
