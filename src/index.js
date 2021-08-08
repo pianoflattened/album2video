@@ -48,6 +48,14 @@ ipcRenderer.on("browse-output-successful", function(event, filePath) {
 	updateSubmitBtn(form);
 });
 
+document.getElementById("collapse-formatting").addEventListener('click', function() {
+	let t = document.getElementById("timestamps");
+	if (t.classList.contains("btn-collapsed")) {
+		t.classList.toggle("btn-collapsed");
+	} else {
+		setTimeout(_ => t.classList.toggle("btn-collapsed"), 350);
+	}
+});
 
 form.extractCover.addEventListener('change', function() {
 	if (this.checked) {

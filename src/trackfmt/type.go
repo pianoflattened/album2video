@@ -6,6 +6,7 @@ const (
 	raw FieldCase = iota
 	lower
 	title
+	upper
 )
 
 type JSONTimestamp struct {

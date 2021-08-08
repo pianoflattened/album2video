@@ -13,13 +13,13 @@ import (
 )
 
 var err error // line 58 :(
-/*
+/*\%(([\^\-v])?(\d+)|(\d+)([\^\-v])?|([\^\-v]))?((\[)(([^\>]|\\.)+)?\}|(\<)(([^\]]|\\.)+)?\])?([tsradnw\%])
    \% - initial percent
-   (([cC])?(\d+)|(\d+)([cC])?|([cC]))? - case/padding
+   (([\^\-v])?(\d+)|(\d+)([\^\-v])?|([\^\-v]))? - case/padding
    (
-	(\[)(([^}]|\\.)+)?\} - ifexists right
+	(\[)(([^\>]|\\.)+)?\} - ifexists right
 	|
-	(\{)(([^}]|\\.)+)?\] - ifexists left
+	(\<)(([^\]]|\\.)+)?\] - ifexists left
    )?
    ([tsradnw\%]) - mode
 */
@@ -31,7 +31,7 @@ func formatTracks(fmtString string, tracks string) string {
 
 	dominantArtist, multDiscs := calcDominantArtist(timestamps)
 
-	re := regexp.MustCompile(`\%(([cC])?(\d+)|(\d+)([cC])?|([cC]))?((\[)(([^}]|\\.)+)?\}|(\{)(([^}]|\\.)+)?\])?([tsradnw\%])`)
+	re := regexp.MustCompile(`\%(([\^\-v])?(\d+)|(\d+)([\^\-v])?|([\^\-v]))?((\[)(([^>]|\\.)+)?\}|(<)(([^\]]|\\.)+)?\])?([tsradnw\%])`)
 	matches := removeDuplicates(re.FindAllStringSubmatch(fmtString, -1))
 
 	for _, jtimestamp := range timestamps {
@@ -47,10 +47,12 @@ func formatTracks(fmtString string, tracks string) string {
 			r.mode, _ = utf8.DecodeRuneInString(match[14])
 
 			switch firstNonZero(match[2], match[5], match[6]).(string) {
-			case "c":
+			case "v":
 				r.fCase = lower
-			case "C":
+			case "-":
 				r.fCase = title
+			case "^":
+				r.fCase = upper
 			}
 
 			r.padding, err = strconv.Atoi(firstNonZero(match[3], match[4]).(string))
@@ -63,7 +65,8 @@ func formatTracks(fmtString string, tracks string) string {
 			field = r.render(timestamp)
 			line = strings.ReplaceAll(line, match[0], field)
 		}
-		// i think this is the more robust way of doing it? skip over escaped % matches and then go back and fix them all?? may have to fix
+		// i think this is the more robust way of doing it? skip over escaped % matches and then go back
+		// and fix them all?? may have to correct this
 		line = strings.ReplaceAll(line, "%%", "%")
 		o += line + "\n"
 	}

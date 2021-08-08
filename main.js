@@ -1,4 +1,5 @@
 // TODO: set or remove app icon
+// TODO: download fonts for consistency across platforms
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
 const BezierEasing = require('bezier-easing');
 const child_process = require('child_process');
@@ -79,7 +80,7 @@ ipcMain.on("browse-cover", function(event) {
 
 ipcMain.on("browse-output-path", function(event) {
 	dialog.showOpenDialog({
-        properties: ['openFile', 'showHiddenFiles'],
+        properties: ['openFile', 'openDirectory', 'showHiddenFiles'],
         title: 'choose output path'
     }).then(result => {
 		if (!result.canceled) {
@@ -211,29 +212,27 @@ ipcMain.on("resize-window", function(event, data) {
 		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(outalg(easeCurve(20/21))), true), 333);
 		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(outalg(easeCurve(21/21))), true), 350);
 	} else {
-		for (i = 1; i <= 21; i++) {
-			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(2/21))), true), 33);
-			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(1/21))), true), 17);
-			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(3/21))), true), 50);
-			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(4/21))), true), 67);
-			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(5/21))), true), 83);
-			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(6/21))), true), 100);
-			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(7/21))), true), 117);
-			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(8/21))), true), 133);
-			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(9/21))), true), 150);
-			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(10/21))), true), 167);
-			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(11/21))), true), 183);
-			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(12/21))), true), 200);
-			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(13/21))), true), 217);
-			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(14/21))), true), 233);
-			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(15/21))), true), 250);
-			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(16/21))), true), 267);
-			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(17/21))), true), 283);
-			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(18/21))), true), 300);
-			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(19/21))), true), 317);
-			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(20/21))), true), 333);
-			setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(21/21))), true), 350);
-		}
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(2/21))), true), 33);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(1/21))), true), 17);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(3/21))), true), 50);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(4/21))), true), 67);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(5/21))), true), 83);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(6/21))), true), 100);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(7/21))), true), 117);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(8/21))), true), 133);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(9/21))), true), 150);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(10/21))), true), 167);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(11/21))), true), 183);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(12/21))), true), 200);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(13/21))), true), 217);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(14/21))), true), 233);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(15/21))), true), 250);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(16/21))), true), 267);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(17/21))), true), 283);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(18/21))), true), 300);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(19/21))), true), 317);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(20/21))), true), 333);
+		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(21/21))), true), 350);
 	}
 });
 
