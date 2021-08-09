@@ -85,6 +85,7 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string) string 
 	cw.Close()
 	os.Remove(cw.Name()) // lol
 
+	// ffmpeg -progress pipe:2 -y -f concat -safe 0 -i [filelist.txt] -c copy concat.wav
 	makeConcatWav := exec.Command(ffmpegPath, "-progress", "pipe:2", "-y", "-f", "concat", "-safe", "0", "-i", fileList.Name(), "-c", "copy", concatWavName)
 	concatStderr, _ := makeConcatWav.StderrPipe()
 	makeConcatWav.Start()
@@ -110,9 +111,10 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string) string 
 	makeDeterminate(channel)
 	setLabel(channel, "making output video..")
 
+	// ffmpeg -progress pipe:2 -y -loop 0 -r [framerate] -i [cover image] -i [concat.wav] -tune stillimage -t [length] -r [framerate] -c:a -c:a libfdk_aac -profile:a aac_low -b:a 384k -pix_fmt yuv420p -c:v libx264 -profile:v high -preset slow -crf 18 -g [framerate/2] -movflags faststart [out.mp4]
 	normalOptions := []string{"-progress", "pipe:2", "-y", "-loop", "0", "-r", fmt.Sprintf("%v", framerate), "-i", videoData.formData.coverPath, "-i", concatWavName, "-tune stillimage", "-t", fmt.Sprintf("%v", length.Seconds()), "-r", fmt.Sprintf("%v", framerate)}
 
-	youtubeOptions := []string{"-c:a", "aac", "-profile:a", "aac_low", "-b:a", "384k", "-pix_fmt", "yuv420p", "-c:v", "libx264", "-profile:v", "high", "-preset", "slow", "-crf", "18", "-g", fmt.Sprintf("%v", gop), "-movflags", "faststart"}
+	youtubeOptions := []string{"-c:a", "libfdk_aac", "-profile:a", "aac_low", "-b:a", "384k", "-pix_fmt", "yuv420p", "-c:v", "libx264", "-profile:v", "high", "-preset", "slow", "-crf", "18", "-g", fmt.Sprintf("%v", gop), "-movflags", "faststart"}
 
 	makeOutputVideo := exec.Command(ffmpegPath, append(normalOptions, append(youtubeOptions, videoData.formData.outputPath)...)...)
 	outputStderr, _ := makeOutputVideo.StderrPipe()

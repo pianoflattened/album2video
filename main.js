@@ -12,6 +12,25 @@ var baseWidth = 0;
 var baseHeight = 0;
 var xX_FFMP3G_BL4CKB0X_Xx, trackfmt;
 var progressBar;
+let os = {
+    win32: "windows",
+    linux: "linux",
+    darwin: "darwin"
+}[runtime.platform];
+let arch = {
+    x64: "amd64",
+    x32: "386"
+}[runtime.arch];
+
+function getBinPath(f) {
+    if (os == "windows") {
+        f += ".exe"
+    }
+    return path.join(__dirname, "bin", os, arch, f)
+}
+
+const ffmpegPath = getBinPath("ffmpeg");
+const ffprobePath = getBinPath("ffprobe");
 
 function createWindow () {
 	win = new BrowserWindow({
@@ -19,7 +38,7 @@ function createWindow () {
 		width: 366,
 		height: 411,
 		webPreferences: {
-			preload: path.join(__dirname, "src/preload_launcher.js"),
+			preload: path.join(__dirname, "src", "preload_launcher.js"),
 			nodeIntegration: true,
 			contextIsolation: false
 		},
