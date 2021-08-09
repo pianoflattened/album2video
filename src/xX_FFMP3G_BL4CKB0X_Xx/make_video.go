@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"os"
 	"os/exec"
 	"path"
@@ -24,6 +25,7 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string) string 
 
 	setLabel(channel, "making file list..")
 	for i, f := range videoData.audioFiles {
+		println(durationToString(length))
 		timestamps = append(timestamps, Timestamp{
 			Artist:       f.artist,
 			Title:        f.title,
@@ -57,7 +59,9 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string) string 
 	}
 
 	setLabel(channel, "calculating minimum framerate..")
-	framerate := float32((1.0 * float32(time.Second)) / float32(length))
+	framerate := float64((1.0 * float64(time.Second)) / float64(length))
+	gop := framerate / 2.0
+	//framerate = math.Max(framerate, 1.0)
 
 	fileList, err := ioutil.TempFile(path.Dir(videoData.audioFiles[0].filename), ".CONCAT--[BIT_LY9099]--*.txt")
 	if err != nil {
@@ -92,7 +96,7 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string) string 
 		m := concatScanner.Text()
 		a := re.FindAllStringSubmatch(m, -1)
 		c, _ := strconv.Atoi(a[len(a)-1][len(a[len(a)-1])-1])
-		setProgress(channel, float32(time.Duration(c)*time.Microsecond)/float32(length))
+		setProgress(channel, float64(time.Duration(c)*time.Microsecond)/float64(length))
 	}
 
 	makeConcatWav.Wait()
@@ -105,7 +109,12 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string) string 
 
 	makeDeterminate(channel)
 	setLabel(channel, "making output video..")
-	makeOutputVideo := exec.Command(ffmpegPath, "-progress", "pipe:2", "-y", "-loop", "0", "-r", fmt.Sprintf("%v", framerate), "-i", videoData.formData.coverPath, "-i", concatWavName, "-t", fmt.Sprintf("%v", length.Seconds()), "-r", fmt.Sprintf("%v", framerate), "-c", "copy", videoData.formData.outputPath)
+
+	normalOptions := []string{"-progress", "pipe:2", "-y", "-loop", "0", "-r", fmt.Sprintf("%v", framerate), "-i", videoData.formData.coverPath, "-i", concatWavName, "-tune stillimage", "-t", fmt.Sprintf("%v", length.Seconds()), "-r", fmt.Sprintf("%v", framerate)}
+
+	youtubeOptions := []string{"-c:a", "aac", "-profile:a", "aac_low", "-b:a", "384k", "-pix_fmt", "yuv420p", "-c:v", "libx264", "-profile:v", "high", "-preset", "slow", "-crf", "18", "-g", fmt.Sprintf("%v", gop), "-movflags", "faststart"}
+
+	makeOutputVideo := exec.Command(ffmpegPath, append(normalOptions, append(youtubeOptions, videoData.formData.outputPath)...)...)
 	outputStderr, _ := makeOutputVideo.StderrPipe()
 	makeOutputVideo.Start()
 
@@ -113,9 +122,10 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string) string 
 	outputScanner.Split(scanFFmpegChunks)
 	for outputScanner.Scan() {
 		m := outputScanner.Text()
+		println(m)
 		a := re.FindAllStringSubmatch(m, -1)
 		c, _ := strconv.Atoi(a[len(a)-1][len(a[len(a)-1])-1])
-		setProgress(channel, float32(time.Duration(c)*time.Microsecond)/float32(length))
+		setProgress(channel, float64(time.Duration(c)*time.Microsecond)/float64(length))
 	}
 
 	makeOutputVideo.Wait()
@@ -145,7 +155,7 @@ func durationToString(d time.Duration) (t string) {
 		minutes, _ = strconv.Atoi(timeSlice[1])
 		seconds, _ = strconv.ParseFloat(timeSlice[2], 32)
 	}
-	t = strings.Split(fmt.Sprintf("%02d:%02d:%02f", hours, minutes, seconds), ".")[0]
+	t = strings.Split(fmt.Sprintf("%02d:%02d:%02d", hours, minutes, int(math.Floor(seconds))), ".")[0]
 	for (strings.HasPrefix(t, "0") || strings.HasPrefix(t, ":")) && len(t) > 4 {
 		t = trimLeftChar(t)
 	}

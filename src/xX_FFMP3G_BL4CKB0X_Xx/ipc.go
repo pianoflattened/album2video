@@ -10,7 +10,7 @@ func setLabel(ipc *ipc.IPC, msg string) {
 	ipc.Send("progress-label", msg)
 }
 
-func setProgress(ipc *ipc.IPC, progress float32) {
+func setProgress(ipc *ipc.IPC, progress float64) {
 	ipc.Send("set-progress", progress)
 }
 

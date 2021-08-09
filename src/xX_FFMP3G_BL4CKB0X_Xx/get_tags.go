@@ -88,7 +88,7 @@ func getTags(channel *ipc.IPC, formData FormData, ffprobePath string) VideoData 
 			if err != nil {
 				panic(err)
 			}
-			seconds := float32(seconds_)
+			seconds := float64(seconds_)
 
 			// frankly i dont trust the tag library's assesment of track / disc numbers SORRY
 			if ffprobeData["format"].(map[string]interface{})["tags"].(map[string]interface{})["disc"] != nil {
@@ -127,7 +127,7 @@ func getTags(channel *ipc.IPC, formData FormData, ffprobePath string) VideoData 
 				year:        year,
 				track:       track,
 				disc:        disc,
-				time:        time.Duration(seconds * float32(time.Second)),
+				time:        time.Duration(seconds * float64(time.Second)),
 				cover:       cover,
 				discTracks:  &discTracks,
 			})
