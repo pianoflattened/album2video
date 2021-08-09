@@ -4,7 +4,7 @@ import (
 	"math"
 )
 
-func calcDominantArtist( /*channel *ipc.IPC,*/ timestamps []JSONTimestamp) (string, bool) {
+func calcDominantArtist(timestamps []JSONTimestamp) (string, bool) {
 
 	var dominantArtist string
 	artists := make(map[string]int)

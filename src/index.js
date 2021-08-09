@@ -1,6 +1,7 @@
 const { app, ipcRenderer } = require("electron");
 const path = require('path');
 const ProgressBar = require('./progress_bar.js');
+var timestamps
 
 var progressBar;
 const form = {
@@ -55,6 +56,14 @@ document.getElementById("collapse-formatting").addEventListener('click', functio
 	} else {
 		setTimeout(_ => t.classList.toggle("btn-collapsed"), 350);
 	}
+});
+
+let trackFormatting = document.getElementById("track-formatting");
+trackFormatting.addEventListener('input', function() {
+	ipcRenderer.send("timestamp-format", {
+		format: trackFormatting.value,
+		timestamps: timestamps
+	});
 });
 
 form.extractCover.addEventListener('change', function() {
@@ -136,10 +145,11 @@ ipcRenderer.on("set-progress", function(event, progress) {
 	progressBar.setProgress(progress);
 });
 
-ipcRenderer.on("get-timestamp-format", function(event, timestamps) {
+ipcRenderer.on("get-timestamp-format", function(event, _timestamps) {
+	timestamps = _timestamps
 	ipcRenderer.send("timestamp-format", {
-		format: document.getElementById('track-formatting').value,
-		timestamps: timestamps
+		format: trackFormatting.value,
+		timestamps: _timestamps
 	});
 });
 

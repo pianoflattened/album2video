@@ -13,11 +13,12 @@ import (
 )
 
 var err error // line 58 :(
+
 /*\%(([\^\-v])?(\d+)|(\d+)([\^\-v])?|([\^\-v]))?((\[)(([^\>]|\\.)+)?\}|(\<)(([^\]]|\\.)+)?\])?([tsradnw\%])
    \% - initial percent
    (([\^\-v])?(\d+)|(\d+)([\^\-v])?|([\^\-v]))? - case/padding
    (
-	(\[)(([^\>]|\\.)+)?\} - ifexists right
+	(\[)(([^\>]|\\.)+)?\> - ifexists right
 	|
 	(\<)(([^\]]|\\.)+)?\] - ifexists left
    )?
@@ -31,7 +32,7 @@ func formatTracks(fmtString string, tracks string) string {
 
 	dominantArtist, multDiscs := calcDominantArtist(timestamps)
 
-	re := regexp.MustCompile(`\%(([\^\-v])?(\d+)|(\d+)([\^\-v])?|([\^\-v]))?((\[)(([^>]|\\.)+)?\}|(<)(([^\]]|\\.)+)?\])?([tsradnw\%])`)
+	re := regexp.MustCompile(`\%(([\^\-v])?(\d+)|(\d+)([\^\-v])?|([\^\-v]))?((\[)(([^>]|\\.)+)?\>|(<)(([^\]]|\\.)+)?\])?([tsradnw\%])`)
 	matches := removeDuplicates(re.FindAllStringSubmatch(fmtString, -1))
 
 	for _, jtimestamp := range timestamps {
@@ -41,7 +42,6 @@ func formatTracks(fmtString string, tracks string) string {
 		for _, match := range matches {
 			field := ""
 			if match[14] == "%" {
-				// field = match[14]
 				continue
 			}
 			r.mode, _ = utf8.DecodeRuneInString(match[14])

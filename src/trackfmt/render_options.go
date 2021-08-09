@@ -51,7 +51,7 @@ func (r renderOptions) render(t Timestamp) string {
 	if r.fCase == lower { // case
 		s = strings.ToLower(s)
 	} else if r.fCase == title {
-		s = TitleCase(s)
+		s = strings.Title(s) // SUCKS
 	}
 
 	return s

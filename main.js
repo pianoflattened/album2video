@@ -80,7 +80,7 @@ ipcMain.on("browse-cover", function(event) {
 
 ipcMain.on("browse-output-path", function(event) {
 	dialog.showOpenDialog({
-        properties: ['openFile', 'openDirectory', 'showHiddenFiles'],
+        properties: ['openFile', 'showHiddenFiles'],
         title: 'choose output path'
     }).then(result => {
 		if (!result.canceled) {
@@ -178,7 +178,13 @@ ipcMain.on("timestamp-format", function(event, data) {
 	// });
 });
 
-// DONT LOOK DOWN HERE THIS PART IS REALLY BAD
+//     ____  ____     _   ______  ______   __    ____  ____  __ __    __   __   __   __   __   __
+//    / __ \/ __ \   / | / / __ \/_  __/  / /   / __ \/ __ \/ //_/   / /  / /  / /  / /  / /  / /
+//   / / / / / / /  /  |/ / / / / / /    / /   / / / / / / / ,<     / /  / /  / /  / /  / /  / /
+//  / /_/ / /_/ /  / /|  / /_/ / / /    / /___/ /_/ / /_/ / /| |   /_/  /_/  /_/  /_/  /_/  /_/
+// /_____/\____/  /_/ |_/\____/ /_/    /_____/\____/\____/_/ |_|  (_)  (_)  (_)  (_)  (_)  (_)
+
+
 
 var easeCurve = BezierEasing(0.25, 0.1, 0.25, 1.0);
 ipcMain.on("resize-window", function(event, data) {
@@ -189,6 +195,8 @@ ipcMain.on("resize-window", function(event, data) {
 	win.setResizable(true); // make sure you make this mac compatible (dont do all these stupid animation timeout lines on there)
 	let outalg = (n) => baseHeight+(n*data.offsetHeight);
 	let inalg = (n) => baseHeight+data.offsetHeight-(n*data.offsetHeight);
+	// i have these lines hidden in my editor and you should too          1000 of below
+	// setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(outalg(easeCurve(1/21))), true), 17);
 	if (data.btnclass == "btn btn-primary") {
 		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(outalg(easeCurve(1/21))), true), 17);
 		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(outalg(easeCurve(2/21))), true), 33);
@@ -235,61 +243,3 @@ ipcMain.on("resize-window", function(event, data) {
 		setTimeout(_ => browserWindow.setContentSize(baseWidth, Math.round(inalg(easeCurve(21/21))), true), 350);
 	}
 });
-
-/*
-17
-33
-50
-67
-83
-100
-117
-133
-150
-167
-183
-200
-217
-233
-250
-267
-283
-300
-317
-333
-350
-*/
-
-/*setTimeout(_ => win.setSize(baseWidth, baseHeight+1, true), 17);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+2, true), 33);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+5, true), 50);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+7, true), 67);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+10, true), 83);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+13, true), 100);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+16, true), 117);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+18, true), 133);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+19, true), 150);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+21, true), 167);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+22, true), 183);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+23, true), 200);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+24, true), 217);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+25, true), 233);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+26, true), 250);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+27, true), 300);// baseheight was 27 here */
-
-/*setTimeout(_ => win.setSize(baseWidth, baseHeight+26 435, true), 17);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+25 434, true), 33);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+22 431, true), 50);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+20 429, true), 67);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+17 426, true), 83);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+14 423, true), 100);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+11 420, true), 117);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+9 418, true), 133);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+8 417, true), 150);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+6 415, true), 167);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+5 414, true), 183);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+4 413, true), 200);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+3 412, true), 217);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+2 411, true), 233);
-setTimeout(_ => win.setSize(baseWidth, baseHeight+1 410, true), 250);
-setTimeout(_ => win.setSize(baseWidth, baseHeight, true), 300);*/
