@@ -24,6 +24,8 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string) string 
 
 	setLabel(channel, "making file list..")
 	for i, f := range videoData.audioFiles {
+		println(fmt.Sprintf("%v", durationToString(length)))
+		println(fmt.Sprintf("%v", f.time))
 		timestamps = append(timestamps, Timestamp{
 			Artist:       f.artist,
 			Title:        f.title,
@@ -136,19 +138,21 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string) string 
 
 func durationToString(d time.Duration) (t string) {
 	timeSlice := regexp.MustCompile(`[hm]`).Split(strings.TrimRight(d.String(), "s"), 3)
-	var hours, minutes, seconds int
+	println(fmt.Sprintf("%v", timeSlice))
+	var hours, minutes int
+	var seconds float64
 	switch len(timeSlice) {
 	case 1:
-		seconds, _ = strconv.Atoi(timeSlice[0])
+		seconds, _ = strconv.ParseFloat(timeSlice[0], 32)
 	case 2:
 		minutes, _ = strconv.Atoi(timeSlice[0])
-		seconds, _ = strconv.Atoi(timeSlice[1])
+		seconds, _ = strconv.ParseFloat(timeSlice[1], 32)
 	default:
 		hours, _ = strconv.Atoi(timeSlice[0])
 		minutes, _ = strconv.Atoi(timeSlice[1])
-		seconds, _ = strconv.Atoi(timeSlice[2])
+		seconds, _ = strconv.ParseFloat(timeSlice[2], 32)
 	}
-	t = fmt.Sprintf("%02d:%02d:%02d", hours, minutes, seconds)
+	t = strings.Split(fmt.Sprintf("%02d:%02d:%02f", hours, minutes, seconds), ".")[0]
 	for (strings.HasPrefix(t, "0") || strings.HasPrefix(t, ":")) && len(t) > 4 {
 		t = trimLeftChar(t)
 	}

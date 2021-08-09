@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path"
 	"regexp"
@@ -37,7 +38,7 @@ func getTags(channel *ipc.IPC, formData FormData, ffprobePath string) VideoData 
 	imageFiles := []string{}
 
 	// wrote this myself :D i'll probably have to change it sometime
-	trackRe := regexp.MustCompile(`^([0-9]+|[A-Za-z]{1,2}|[0-9]+[A-Za-z]|)(-| - |_| |)([0-9]+|[A-Za-z])(. | |_)`)
+	trackRe := regexp.MustCompile(`^([0-9]+|[A-Za-z]{1,2}|[0-9]+[A-Za-z]|)([-_ ]| - |)([0-9]+|[A-Za-z])[ _.]`)
 
 	for _, base := range files {
 		if strings.HasPrefix(base, ".CONCAT--[BIT_LY9099]--") {
@@ -99,13 +100,14 @@ func getTags(channel *ipc.IPC, formData FormData, ffprobePath string) VideoData 
 			if ffprobeData["format"].(map[string]interface{})["tags"].(map[string]interface{})["track"] != nil {
 				track = parseTrackTag(ffprobeData["format"].(map[string]interface{})["tags"].(map[string]interface{})["track"].(string))
 			} else {
-				if !trackRe.MatchString(file) {
-					panic(errors.New("please make sure your filenames start with a track number" +
-						"if they are not tagged properly (which would be preferrable). for exact" +
-						"specifications as to what does and does not get detected as a track" +
-						"number see https://github.com/sunglasseds/album2video"))
+				if !trackRe.MatchString(path.Base(file)) {
+					panic(errors.New("please make sure your filenames start with a track number if they " +
+						"are not tagged properly (which would be preferrable). for exact specifications as " +
+						"to what does and does not get detected as a track number see https://github.com/" +
+						"sunglasseds/album2video. if yr files are properly tagged and the track numbers " +
+						"work then ffprobe is fucked and i have to use straight command output probably"))
 				}
-				track, disc = parseTrack(file, trackRe)
+				track, disc = parseTrack(path.Base(file), trackRe)
 			}
 
 			if dt, ok := discTracks[disc]; ok {
@@ -116,6 +118,7 @@ func getTags(channel *ipc.IPC, formData FormData, ffprobePath string) VideoData 
 				discTracks[disc] = track
 			}
 
+			println(fmt.Sprintf("%v", seconds))
 			audioFiles = append(audioFiles, AudioFile{
 				filename:    file,
 				artist:      artist,
@@ -235,11 +238,11 @@ func parseTrack(filename string, trackRe *regexp.Regexp) (int, int) {
 	if err != nil {
 		d = 1
 		switch len(discSubmatch) {
-		case 1:
-			d += int64(strings.Index(strings.ToLower(string(discSubmatch[0])), alphabet))
-			fallthrough
 		case 2:
 			d += int64(strings.Index(strings.ToLower(string(discSubmatch[1])), alphabet) * 26)
+			fallthrough
+		case 1:
+			d += int64(strings.Index(strings.ToLower(string(discSubmatch[0])), alphabet))
 		default:
 			panic(err)
 		}

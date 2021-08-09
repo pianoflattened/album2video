@@ -9,6 +9,10 @@ func main() {
 	fmtStr := os.Args[1]
 	timestamps := os.Args[2]
 
+	if len(fmtStr) == 0 {
+		fmtStr = "%[ - >a%s - %t"
+	}
+
 	formatted := formatTracks(fmtStr, timestamps)
 	fmt.Println(formatted)
 }
