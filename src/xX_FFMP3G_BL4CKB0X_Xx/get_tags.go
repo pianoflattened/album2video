@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"path"
 	"regexp"
@@ -17,6 +16,7 @@ import (
 	ffmpeg "github.com/modfy/fluent-ffmpeg"
 )
 
+// i was on crack and drugs when i wrote this
 const alphabet = "abcdefghijklmnopqrstuvwxyz"
 
 func getTags(channel *ipc.IPC, formData FormData, ffprobePath string) VideoData {
@@ -118,7 +118,6 @@ func getTags(channel *ipc.IPC, formData FormData, ffprobePath string) VideoData 
 				discTracks[disc] = track
 			}
 
-			println(fmt.Sprintf("%v", seconds))
 			audioFiles = append(audioFiles, AudioFile{
 				filename:    file,
 				artist:      artist,
@@ -132,7 +131,6 @@ func getTags(channel *ipc.IPC, formData FormData, ffprobePath string) VideoData 
 				cover:       cover,
 				discTracks:  &discTracks,
 			})
-			Println(channel, title)
 
 		case "image":
 			imageFiles = append(imageFiles, file)
@@ -260,6 +258,7 @@ func parseTrack(filename string, trackRe *regexp.Regexp) (int, int) {
 }
 
 // le []AudioFile sorting interface
+// see line 19 for more info
 type byTrack []AudioFile
 
 func (s byTrack) Len() int {

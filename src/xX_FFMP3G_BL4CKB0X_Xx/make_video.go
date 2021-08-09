@@ -24,8 +24,6 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string) string 
 
 	setLabel(channel, "making file list..")
 	for i, f := range videoData.audioFiles {
-		println(fmt.Sprintf("%v", durationToString(length)))
-		println(fmt.Sprintf("%v", f.time))
 		timestamps = append(timestamps, Timestamp{
 			Artist:       f.artist,
 			Title:        f.title,
@@ -62,7 +60,6 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string) string 
 	framerate := float32((1.0 * float32(time.Second)) / float32(length))
 
 	fileList, err := ioutil.TempFile(path.Dir(videoData.audioFiles[0].filename), ".CONCAT--[BIT_LY9099]--*.txt")
-	Println(channel, fileList.Name())
 	if err != nil {
 		panic(err)
 	}
@@ -76,7 +73,6 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string) string 
 	setLabel(channel, "concatenating audio files..")
 
 	cw, err := ioutil.TempFile(path.Dir(videoData.audioFiles[0].filename), ".CONCAT--[BIT_LY9099]--*.wav")
-	Println(channel, cw.Name())
 	if err != nil {
 		panic(err)
 	}
@@ -117,7 +113,6 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string) string 
 	outputScanner.Split(scanFFmpegChunks)
 	for outputScanner.Scan() {
 		m := outputScanner.Text()
-		Println(channel, m)
 		a := re.FindAllStringSubmatch(m, -1)
 		c, _ := strconv.Atoi(a[len(a)-1][len(a[len(a)-1])-1])
 		setProgress(channel, float32(time.Duration(c)*time.Microsecond)/float32(length))
@@ -125,7 +120,6 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string) string 
 
 	makeOutputVideo.Wait()
 
-	//err = os.Remove(concatWavName); if err != nil { Println(channel, err) }
 	if videoData.formData.extractCover {
 		os.Remove(videoData.formData.coverPath)
 	}
@@ -138,7 +132,6 @@ func makeVideo(channel *ipc.IPC, videoData VideoData, ffmpegPath string) string 
 
 func durationToString(d time.Duration) (t string) {
 	timeSlice := regexp.MustCompile(`[hm]`).Split(strings.TrimRight(d.String(), "s"), 3)
-	println(fmt.Sprintf("%v", timeSlice))
 	var hours, minutes int
 	var seconds float64
 	switch len(timeSlice) {
@@ -191,11 +184,3 @@ func scanFFmpegChunks(data []byte, atEOF bool) (advance int, token []byte, err e
 
 	return 0, nil, nil
 }
-
-/*
-
-
-
-C:\Users\user\dev\album2video\node_modules\@ffmpeg-installer\win32-x64\ffmpeg.exe -progress pipe:2 -y -loop 0 -r 0.00025026314 -i . -i C:\Users\user\Documents\Soulseek Downloads\complete\lougrig1962\taku sugimoto - chamber music (bottrop boy, 2003)\.tmpCONCAT--[BIT_LY9099]--419234378.wav -t 3995.794276352 -r 0.00025026314 -c copy C:\Users\user\Documents\Soulseek Downloads\complete\lougrig1962\taku sugimoto - chamber music (bottrop boy, 2003)\/out.mp4 null
-
-*/

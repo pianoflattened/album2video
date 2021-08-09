@@ -1,6 +1,7 @@
 const { app, ipcRenderer } = require("electron");
 const path = require('path');
 const ProgressBar = require('./progress_bar.js');
+var allowRunningTimestamps = false
 var timestamps
 
 var progressBar;
@@ -54,13 +55,13 @@ document.getElementById("collapse-formatting").addEventListener('click', functio
 	if (t.classList.contains("btn-collapsed")) {
 		t.classList.toggle("btn-collapsed");
 	} else {
-		setTimeout(_ => t.classList.toggle("btn-collapsed"), 350);
+		setTimeout(_ => t.classList.toggle("btn-collapsed"), 300);
 	}
 });
 
 let trackFormatting = document.getElementById("track-formatting");
 trackFormatting.addEventListener('input', function() {
-	ipcRenderer.send("timestamp-format", {
+	if (allowRunningTimestamps) ipcRenderer.send("timestamp-format", {
 		format: trackFormatting.value,
 		timestamps: timestamps
 	});
@@ -94,7 +95,7 @@ form.separateVideos.addEventListener('change', function() {
 		form.outputPath.value = outpath;
 	}
 	updateSubmitBtn(form); // fixes a bug where checking the separate videos box breaks the submit
-						   // button because the event fire off in an order i cant control
+						   // button because the event fires off in an order i cant control
 });
 
 for (const key in form) {
@@ -129,7 +130,7 @@ const collapseFormatting = document.getElementById('collapse-formatting');
 collapseFormatting.addEventListener('click', function() {
 	ipcRenderer.send('resize-window', {
 		btnclass: collapseFormatting.className,
-		offsetHeight: process.platform == "win32" ? 28 : 27
+		offsetHeight: process.platform == "win32" ? 28 : 27 // LOL
 	});
 });
 
@@ -163,4 +164,6 @@ ipcRenderer.on("set-error", function(event, code) {
 
 ipcRenderer.on("timestamps", function(event, timestamps) {
 	document.getElementById("timestamps").value = timestamps;
+	document.getElementById("timestamps").setAttribute("readonly", "");
+	allowRunningTimestamps = true
 });

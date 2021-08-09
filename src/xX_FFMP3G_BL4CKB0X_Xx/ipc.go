@@ -1,9 +1,7 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/Akumzy/ipc"
 )
@@ -21,16 +19,6 @@ func makeDeterminate(ipc *ipc.IPC) {
 }
 
 func sendTimestamps(ipc *ipc.IPC, timestamps []Timestamp) {
-	f, err := os.Create("C:\\Users\\user\\Documents\\timestamps.txt")
-	if err != nil {
-		panic(err)
-	}
-	n, err := json.Marshal(timestamps)
-	if err != nil {
-		panic(err)
-	}
-	f.Write(n)
-
 	ipc.Send("timestamps", timestamps)
 }
 
