@@ -2,6 +2,22 @@
 
 gui application that makes a folder of sound files (any format that ffmpeg likes) + album art into a youtube-uploadable format
 
+### TODO
+
+#### major updates (will take a few days to get working probably)
+- youtube/mega uploading from application
+- bulk conversion
+- cover art detection
+- once i get packaging down i should write a script that builds it given an api key
+
+#### minor changes
+- make errors appear in alert windows or something literally anything but console output
+	- logs wld be cool too
+- figure out how to use fonts locally (should be really easy)
+- trim as much as i can from bootstrap when building
+- picture of guy with headphones going oh yeah for icon
+
+
 ### setting ffmpeg/ffprobe paths
 JUST KIDDING i saw you grimace it was pretty funny makes you look like a cartoon character when you do that. i use a magic node library that automatically downloads binaries depending on ur os (linked below) and i built it with those. if you want to use a different version / have some modified version of ffmpeg bc youre a sociopath then build from source i guess
 
