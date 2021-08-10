@@ -43,6 +43,8 @@ npm install
 ```
 `npm start` 2 run
 
+THIS IS OLD IM GOING OT REWRITE THIS ONCE I GET THIS PROCESS DOWN I DONT RLY KNOW HOW TO DO THIS FULLY YET
+
 ### track detection from filenames (for when ur stuffs not tagged)
 the regex is currently as follows:
 ```regex
