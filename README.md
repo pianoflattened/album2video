@@ -9,6 +9,7 @@ gui application that makes a folder of sound files (any format that ffmpeg likes
 - bulk conversion
 - cover art detection
 - once i get packaging down i should write a script that builds it given an api key
+    - better idea - make a config file. this way i can also save the last used fmt string + other things
 
 #### minor changes
 - make errors appear in alert windows or something literally anything but console output

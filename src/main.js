@@ -3,34 +3,46 @@
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
 const BezierEasing = require('bezier-easing');
 const child_process = require('child_process');
-const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
-const ffprobePath = require('@ffprobe-installer/ffprobe').path;
+// const ffmpegPath = require('ffmpeg-static');
+// const ffprobePath = require('ffprobe-static').path;
 const IPC = require('ipc-node-go')
 const path = require('path');
+import { platform } from 'os';
+import { rootPath } from 'electron-root-path';
+
+function getPlatform() {
+  switch (platform()) {
+    case 'aix':
+    case 'freebsd':
+    case 'linux':
+    case 'openbsd':
+    case 'android':
+      return 'linux';
+    case 'darwin':
+    case 'sunos':
+      return 'mac';
+    case 'win32':
+      return 'win';
+  }
+};
+
+const root = rootPath;console.log("30");
+const binPath = process.mainModule.filename.indexOf('app.asar') !== -1 ? path.join(path.dirname(app.getAppPath()), '..', './resources', './bin') : path.join(root, './bin');
+
+function getBin(p) {
+    return path.resolve(path.join(binPath, p)) + (getPlatform() == "win" ? ".exe" : "");
+}
+
+const blackboxPath = getBin('xX_FFMP3G_BL4CKB0X_Xx');
+const trackfmtPath = getBin('trackfmt');
+const ffmpegPath = getBin('ffmpeg');
+const ffprobePath = getBin('ffprobe');
+
 var win;
 var baseWidth = 0;
 var baseHeight = 0;
 var xX_FFMP3G_BL4CKB0X_Xx, trackfmt;
 var progressBar;
-let os = {
-    win32: "windows",
-    linux: "linux",
-    darwin: "darwin"
-}[runtime.platform];
-let arch = {
-    x64: "amd64",
-    x32: "386"
-}[runtime.arch];
-
-function getBinPath(f) {
-    if (os == "windows") {
-        f += ".exe"
-    }
-    return path.join(__dirname, "bin", os, arch, f)
-}
-
-const ffmpegPath = getBinPath("ffmpeg");
-const ffprobePath = getBinPath("ffprobe");
 
 function createWindow () {
 	win = new BrowserWindow({
@@ -130,11 +142,12 @@ var blackboxtimes = 0;
 var trackfmttimes = 0;
 ipcMain.on("make-video", function(event, jsonData) {
     let args = JSON.parse(jsonData);
-	if (process.platform == "win32") {
-		xX_FFMP3G_BL4CKB0X_Xx = new IPC('./bin/xX_FFMP3G_BL4CKB0X_Xx.exe');
-	} else { // (process.platform == "linux")
-		xX_FFMP3G_BL4CKB0X_Xx = new IPC('./bin/xX_FFMP3G_BL4CKB0X_Xx');
-	}
+    xX_FFMP3G_BL4CKB0X_Xx = new IPC(blackboxPath);
+	// if (process.platform == "win32") {
+	// 	xX_FFMP3G_BL4CKB0X_Xx = new IPC('./bin/xX_FFMP3G_BL4CKB0X_Xx.exe');
+	// } else { // (process.platform == "linux")
+	// 	xX_FFMP3G_BL4CKB0X_Xx = new IPC('./bin/xX_FFMP3G_BL4CKB0X_Xx');
+	// }
     xX_FFMP3G_BL4CKB0X_Xx.init(args.concat([ffprobePath, ffmpegPath]));
 	xX_FFMP3G_BL4CKB0X_Xx.on("log", console.log);
 	xX_FFMP3G_BL4CKB0X_Xx.on("error", console.error);
@@ -164,15 +177,15 @@ ipcMain.on("make-video", function(event, jsonData) {
 ipcMain.on("timestamp-format", function(event, data) {
 	let format = data.format;
 	let timestamps = data.timestamps;
-	let trackfmtPath;
-
-	if (process.platform == "win32") {
-		trackfmtPath = "./bin/trackfmt.exe";
-		// trackfmt = new IPC('./bin/trackfmt.exe');
-	} else { // (process.platform == "linux")
-		// trackfmt = new IPC('./bin/trackfmt');
-		trackfmtPath = "./bin/trackfmt";
-	}
+	// let trackfmtPath;
+    //
+	// if (process.platform == "win32") {
+	// 	trackfmtPath = "./bin/trackfmt.exe";
+	// 	// trackfmt = new IPC('./bin/trackfmt.exe');
+	// } else { // (process.platform == "linux")
+	// 	// trackfmt = new IPC('./bin/trackfmt');
+	// 	trackfmtPath = "./bin/trackfmt";
+	// }
 	var trackfmt = child_process.spawn(trackfmtPath, [format, timestamps]);
 	trackfmt.stdout.on('data', data => {
 		event.reply("timestamps", data.toString());
@@ -185,24 +198,14 @@ ipcMain.on("timestamp-format", function(event, data) {
 	trackfmt.on("close", code => {
 		console.log("trackfmt closed with " + code);
 	});
-
-	// trackfmt.init([format, timestamps]);
-	// trackfmt.on("log", console.log);
-	// trackfmt.on("error", console.error);
-	// trackfmt.on("close", (code) => console.log("trackfmt closed with " + code));
-	// trackfmt.on("result", data => {
-	// 	console.log(data);
-	// 	trackfmt.kill();
-	// 	event.reply("timestamps", data);
-	// });
 });
+
 
 //     ____  ____     _   ______  ______   __    ____  ____  __ __    __   __   __   __   __   __
 //    / __ \/ __ \   / | / / __ \/_  __/  / /   / __ \/ __ \/ //_/   / /  / /  / /  / /  / /  / /
 //   / / / / / / /  /  |/ / / / / / /    / /   / / / / / / / ,<     / /  / /  / /  / /  / /  / /
 //  / /_/ / /_/ /  / /|  / /_/ / / /    / /___/ /_/ / /_/ / /| |   /_/  /_/  /_/  /_/  /_/  /_/
 // /_____/\____/  /_/ |_/\____/ /_/    /_____/\____/\____/_/ |_|  (_)  (_)  (_)  (_)  (_)  (_)
-
 
 
 var easeCurve = BezierEasing(0.25, 0.1, 0.25, 1.0);

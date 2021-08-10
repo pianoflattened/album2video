@@ -2,12 +2,23 @@
   "name": "album2video",
   "version": "1.0.0",
   "description": "converts sound files into a youtube-uploadable format",
-  "main": "main.js",
+  "main": "./src/main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron-forge start",
-    "package": "electron-forge package",
-    "make": "electron-forge make"
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "extraFiles": [
+      {
+        "from": "./bin",
+        "to": "resources/bin",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ]
   },
   "author": "quak",
   "license": "APGL-3.0",
@@ -16,17 +27,21 @@
     "babel-plugin-transform-async-to-generator": "^6.24.1",
     "babel-preset-env": "^1.7.0",
     "babel-preset-react": "^6.24.1",
-    "electron-forge": "^5.2.4",
+    "electron-builder": "^22.11.7",
     "electron-prebuilt-compile": "8.2.0"
   },
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@ffprobe-installer/ffprobe": "^1.1.0",
     "@npcz/magic": "^1.3.11",
+    "app-root-dir": "^1.0.2",
     "bezier-easing": "^2.1.0",
     "electron-compile": "^6.4.4",
     "electron-progressbar": "^2.0.1",
+    "electron-root-path": "^1.0.16",
     "electron-squirrel-startup": "^1.0.0",
+    "ffmpeg-static": "^4.4.0",
+    "ffprobe-static": "^3.0.0",
     "fluent-ffmpeg": "^2.1.2",
     "image-size": "^1.0.0",
     "ipc-node-go": "^0.2.0",
@@ -34,37 +49,5 @@
     "mime-types": "^2.1.32",
     "serialize-javascript": "^6.0.0",
     "tmp": "^0.2.1"
-  },
-  "config": {
-    "forge": {
-      "make_targets": {
-        "win32": [
-          "squirrel"
-        ],
-        "darwin": [
-          "zip"
-        ],
-        "linux": [
-          "deb",
-          "rpm"
-        ]
-      },
-      "electronPackagerConfig": {
-        "packageManager": "npm"
-      },
-      "electronWinstallerConfig": {
-        "name": "album2video"
-      },
-      "electronInstallerDebian": {},
-      "electronInstallerRedhat": {},
-      "github_repository": {
-        "owner": "",
-        "name": ""
-      },
-      "windowsStoreConfig": {
-        "packageName": "",
-        "name": "album2video"
-      }
-    }
   }
 }
