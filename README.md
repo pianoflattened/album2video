@@ -6,26 +6,7 @@ gui application that makes a folder of sound files (any format that ffmpeg likes
 JUST KIDDING i saw you grimace it was pretty funny makes you look like a cartoon character when you do that. i use a magic node library that automatically downloads binaries depending on ur os (linked below) and i built it with those. if you want to use a different version / have some modified version of ffmpeg bc youre a sociopath then build from source i guess
 
 ### building from source
-this is pretty half-baked idk why anyone would want to know how as of right now but i need to write this in so i don't forget how to do this in the future. will update w instructions for cross-compilation later (again also for myself lol)
-
-im using node 14.17.4 and go 16
-```bash
-git clone https://github.com/sunglasseds/album2video.git album2video
-cd album2video
-mkdir bin
-# build the scary evil binaries
-cd src/xX_FFMP3G_BL4CKB0X_Xx
-go build -o ../../bin
-cd ../trackfmt
-go build -o ../../bin
-cd ../..
-npm install
-# add the .exe extension to the path if ur on windows
-mv node_modules/ffmpeg-static/ffmpeg bin
-mv node_modules/ffprobe-static/ffprobe bin
-npm run dist
-```
-it shld pop up in the dist folder. i will not be writing a script for this. if you get errors uh
+lol
 
 ### track detection from filenames (for when ur stuffs not tagged)
 the regex is currently as follows:
