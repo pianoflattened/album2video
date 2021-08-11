@@ -2,34 +2,13 @@
 
 gui application that makes a folder of sound files (any format that ffmpeg likes) + album art into a youtube-uploadable format
 
-### TODO
-
-#### major updates (will take a few days to get working probably)
-- youtube/mega uploading from application
-- bulk conversion
-- cover art detection
-- once i get packaging down i should write a script that builds it given an api key
-    - better idea - make a config file. this way i can also save the last used fmt string + other things
-
-#### minor changes
-- make errors appear in alert windows or something literally anything but console output
-	- logs wld be cool too
-- figure out how to use fonts locally (should be really easy)
-- trim as much as i can from bootstrap when building
-- picture of guy with headphones going oh yeah for icon
-
-
 ### setting ffmpeg/ffprobe paths
 JUST KIDDING i saw you grimace it was pretty funny makes you look like a cartoon character when you do that. i use a magic node library that automatically downloads binaries depending on ur os (linked below) and i built it with those. if you want to use a different version / have some modified version of ffmpeg bc youre a sociopath then build from source i guess
 
-https://github.com/kribblo/node-ffmpeg-installer
-https://github.com/SavageCore/node-ffprobe-installer
-
 ### building from source
-
 this is pretty half-baked idk why anyone would want to know how as of right now but i need to write this in so i don't forget how to do this in the future. will update w instructions for cross-compilation later (again also for myself lol)
 
-you will need to have a reasonably new version of nodejs / npm and golang 1.16
+im using node 14.17.4 and go 16
 ```bash
 git clone https://github.com/sunglasseds/album2video.git album2video
 cd album2video
@@ -39,11 +18,14 @@ cd src/xX_FFMP3G_BL4CKB0X_Xx
 go build -o ../../bin
 cd ../trackfmt
 go build -o ../../bin
+cd ../..
 npm install
+# add the .exe extension to the path if ur on windows
+mv node_modules/ffmpeg-static/ffmpeg bin
+mv node_modules/ffprobe-static/ffprobe bin
+npm run dist
 ```
-`npm start` 2 run
-
-THIS IS OLD IM GOING OT REWRITE THIS ONCE I GET THIS PROCESS DOWN I DONT RLY KNOW HOW TO DO THIS FULLY YET
+it shld pop up in the dist folder. i will not be writing a script for this. if you get errors uh
 
 ### track detection from filenames (for when ur stuffs not tagged)
 the regex is currently as follows:
@@ -53,7 +35,7 @@ the regex is currently as follows:
 slap it into a site like https://regexr.com/ and type in track names to see if yours work. they probably will but if they dont submit a pr or otherwise let me know and i'll try to fix it
 
 ### tracklist formatting
-reference for myself dw about it yet although if youve ever used printf in your life most of this should make sense
+if youve ever used printf in your life most of this should make sense
 ```%s song
 %t timestamp
 %r artist (indiscriminate)
@@ -90,9 +72,6 @@ https://superuser.com/questions/1584842/ffprobe-output-text-wrong-encoding/15886
 > Click Ok and restart computer. <br>
 
 i had to search "region" 2 find the setting
-
-### wahh wahh im just a small chlid and i wanted a command line tool i coul use with a bunch of PIPES or whatever
-that is what you stupid linux users sound like to me and jsut to spite you i will be making something like this but ironically becuase i think your all idiots
 
 ---
 # ***SORRY FOR MAKING AN ELECTRON APP !!!!!!!!!!!!!!!***

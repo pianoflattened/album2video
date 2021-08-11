@@ -1,5 +1,6 @@
 src/get_tags.js
 src/make_video.js
+a2v-config.json
 
 # Logs
 logs
@@ -137,3 +138,4 @@ bin/
 
 ref/
 dist/
+yt_client_secret.json

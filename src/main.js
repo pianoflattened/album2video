@@ -5,6 +5,7 @@ const BezierEasing = require('bezier-easing');
 const child_process = require('child_process');
 // const ffmpegPath = require('ffmpeg-static');
 // const ffprobePath = require('ffprobe-static').path;
+const fs = require('fs');
 const IPC = require('ipc-node-go')
 const path = require('path');
 import { platform } from 'os';
@@ -25,6 +26,23 @@ function getPlatform() {
       return 'win';
   }
 };
+
+// debug function
+// var _getAllFilesFromFolder = function(dir) {
+//     var filesystem = require("fs");
+//     var results = [];
+//     filesystem.readdirSync(dir).forEach(function(file) {
+//         file = dir+'/'+file;
+//         var stat = filesystem.statSync(file);
+//         if (stat && stat.isDirectory()) {
+//             results.push(file)
+//             // results = results.concat(_getAllFilesFromFolder(file))
+//         } else results.push(file);
+//     });
+//     return results;
+// };
+//
+// console.log(_getAllFilesFromFolder("."));
 
 const root = rootPath;console.log("30");
 const binPath = process.mainModule.filename.indexOf('app.asar') !== -1 ? path.join(path.dirname(app.getAppPath()), '..', './resources', './bin') : path.join(root, './bin');
