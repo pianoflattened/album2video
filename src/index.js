@@ -164,6 +164,6 @@ ipcRenderer.on("set-error", function(event, code) {
 
 ipcRenderer.on("timestamps", function(event, timestamps) {
 	document.getElementById("timestamps").value = timestamps;
-	document.getElementById("timestamps").setAttribute("readonly", "");
-	allowRunningTimestamps = true
+	document.getElementById("timestamps").removeAttribute("readonly");
+	allowRunningTimestamps = true;
 });

@@ -2,6 +2,11 @@
 
 gui application that makes a folder of sound files (any format that ffmpeg likes) + album art into a youtube-uploadable format
 
+## THIGNS I NEED TO FIX
+- if the image dimensions arent both even numbers then it stops (yuv480p quirk sorry abt this youtube requires this for uploading lol)
+- substantial slowdown if image is large - resize image to be 720px tall if it is taller
+	- add an option to disable this
+
 ### setting ffmpeg/ffprobe paths
 JUST KIDDING i saw you grimace it was pretty funny makes you look like a cartoon character when you do that. i use a magic node library that automatically downloads binaries depending on ur os (linked below) and i built it with those. if you want to use a different version / have some modified version of ffmpeg bc youre a sociopath then build from source i guess
 
@@ -39,6 +44,8 @@ v lowercase
 (number) pad zeroes
 ```
 example (the format i use): `%v[ - >a%vs - %3vt`
+
+if nothing is entered the script will use `%[ - >a%s - %t`
 
 you can write your own formatter and replace the binary if you want. the blackbox has some ipc stuff going on that makes it a bit less practical to immediately replace but the formatter is just straight input -> output stuff v straightforward
 

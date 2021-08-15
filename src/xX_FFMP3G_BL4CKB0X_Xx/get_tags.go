@@ -190,15 +190,15 @@ func validatePaths(channel *ipc.IPC, formData FormData) FormData {
 		} else {
 			panic(err)
 		}
-	}
-
-	if formData.separateFiles && stats.Mode().IsRegular() {
-		formData.outputPath = path.Dir(formData.outputPath)
-	} else if (!formData.separateFiles) && stats.IsDir() {
-		formData.outputPath = path.Join(formData.outputPath, "out.mp4")
-	} else if formData.separateFiles == stats.IsDir() { /* pass */
 	} else {
-		panic(errors.New(formData.outputPath + " is not a file or directory"))
+		if formData.separateFiles && stats.Mode().IsRegular() {
+			formData.outputPath = path.Dir(formData.outputPath)
+		} else if (!formData.separateFiles) && stats.IsDir() {
+			formData.outputPath = path.Join(formData.outputPath, "out.mp4")
+		} else if formData.separateFiles == stats.IsDir() { /* pass */
+		} else {
+			panic(errors.New(formData.outputPath + " is not a file or directory"))
+		}
 	}
 	return formData
 }

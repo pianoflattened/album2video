@@ -8,8 +8,8 @@ const child_process = require('child_process');
 const fs = require('fs');
 const IPC = require('ipc-node-go')
 const path = require('path');
-import { platform } from 'os';
-import { rootPath } from 'electron-root-path';
+const {platform} = require("os");
+const {rootPath} = require("electron-root-path");
 
 function getPlatform() {
   switch (platform()) {
@@ -68,7 +68,7 @@ function createWindow () {
 		width: 366,
 		height: 411,
 		webPreferences: {
-			preload: path.join(__dirname, "src", "preload_launcher.js"),
+			preload: path.join(__dirname, "preload.js"),
 			nodeIntegration: true,
 			contextIsolation: false
 		},
@@ -168,7 +168,15 @@ ipcMain.on("make-video", function(event, jsonData) {
 	// }
     xX_FFMP3G_BL4CKB0X_Xx.init(args.concat([ffprobePath, ffmpegPath]));
 	xX_FFMP3G_BL4CKB0X_Xx.on("log", console.log);
-	xX_FFMP3G_BL4CKB0X_Xx.on("error", console.error);
+	xX_FFMP3G_BL4CKB0X_Xx.on("error", (err) => {
+		console.error(err);
+		dialog.showMessageBox({
+			message: err,
+			type: "error",
+			title: "error"
+		});
+		event.reply("set-error", err);
+	});
 	xX_FFMP3G_BL4CKB0X_Xx.on("close", (code) => console.log("xX_FFMP3G_BL4CKB0X_Xx closed with " + code));
 	xX_FFMP3G_BL4CKB0X_Xx.on("progress-label", data => {
 		event.reply("progress-label", data);
