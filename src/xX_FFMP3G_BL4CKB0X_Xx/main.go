@@ -37,6 +37,8 @@ func init() {
 }
 
 func main() {
+	getopt.Parse()
+	
 	if help {
 		// !!!!!!!!!!! WHY WAS THIS SO HARD 2 FIGURE OUT
 		getopt.Usage()
