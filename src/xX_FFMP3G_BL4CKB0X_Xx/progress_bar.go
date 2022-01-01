@@ -10,14 +10,24 @@ import (
 	"golang.org/x/term"
 )
 
-const spinner = [6]string["⠋", "⠙", "⠸", "⠴", "⠦", "⠇"]
+var spinner = [6]string{"⠋", "⠙", "⠸", "⠴", "⠦", "⠇"}
 
 type ProgressBar struct {
 	Label    	string
 	Progress 	float64
-	Previous	float64
+	Previous	int
 	Determinate bool
 	Complete	bool
+}
+
+func NewProgressBar(determinate bool) (bar ProgressBar) {
+	return ProgressBar{
+		Label: "",
+		Progress: 0.0,
+		Previous: -1,
+		Determinate: determinate,
+		Complete: false,
+	}
 }
 
 func (p *ProgressBar) Render(currentSize, completeSize float64) (bar string) {
@@ -29,24 +39,27 @@ func (p *ProgressBar) Render(currentSize, completeSize float64) (bar string) {
 	}
 
 	if !p.Determinate {
-		braille := 
-		if width < 1 {
-			bar = ""
-		}
+		minout := utf8.RuneCountInString(p.Label) + 2
+		(*p).Previous = (p.Previous + 1) % 6
+		spinnerStage := spinner[p.Previous]
 		
 		if p.Complete {
-			bar = "✓"
-		} else {
-			bar = spinner[p.Previous + 1]
-			(*p).Previous += 1
+			spinnerStage = "✓"
 		}
+		
+		if width - minout < 0 {
+			if width < 1 {
+				bar = ""
+			}
+			return spinnerStage
+		}
+		return fmt.Sprintf("%s %s\r", spinnerStage, p.Label)
 		
 	} else {
 		minout := utf8.RuneCountInString(fmt.Sprintf("|░| 100%% (%.1f/%.1f MB)", completeSize, completeSize))
 		pbarWidth := width-minout+1
-		percentComplete := currentSize / completeSize
-		pbarAmount := math.Floor(pbarWidth * percentComplete)
-		percentStr := fmt.Sprintf("%3.0f%%", percentComplete * 100)
+		pbarAmount := int(math.Floor(float64(pbarWidth) * (*p).Progress))
+		percentStr := fmt.Sprintf("%3.0f%%", (*p).Progress * 100)
 		
 		if p.Complete {
 			currentSize = completeSize
@@ -61,15 +74,15 @@ func (p *ProgressBar) Render(currentSize, completeSize float64) (bar string) {
 						if width < 4 { // len("100%")
 							bar = ""
 						}
-						bar = percentStr
+						return percentStr
 					}
-					bar = fmt.Sprintf("%.1f/%.1f MB", currentSize, completeSize)
+					return fmt.Sprintf("%.1f/%.1f MB\r", currentSize, completeSize)
 				}
-				bar = fmt.Sprintf("(%.1f/%.1f MB)", currentSize, completeSize)
+				return fmt.Sprintf("(%.1f/%.1f MB)\r", currentSize, completeSize)
 			}
-			bar = fmt.Sprintf("%s (%.1f/%.1f MB)", percentStr, completeSize, completeSize)
+			return fmt.Sprintf("%s (%.1f/%.1f MB)\r", percentStr, currentSize, completeSize)
 		}
-		bar = fmt.Sprintf("|%s| %s (%.1f/%.1f MB)", strings.Repeat("█", pbarAmount), percentStr, completeSize, completeSize)
+		return fmt.Sprintf("|%s%s| %s (%.1f/%.1f MB)\r", strings.Repeat("█", pbarAmount), strings.Repeat("░", pbarWidth-pbarAmount), percentStr, currentSize, completeSize)
 	}
 	return
 }

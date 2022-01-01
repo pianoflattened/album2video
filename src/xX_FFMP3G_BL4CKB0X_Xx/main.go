@@ -1,14 +1,14 @@
 package main
 
 import (
-	"os"
+	"fmt"
 	"os/exec"
 	"runtime"
 
 	"github.com/pborman/getopt/v2"
 )
 
-var {
+var (
 	albumDirectory = "."
 	coverPath = ""
 	extractCover bool
@@ -20,6 +20,7 @@ var {
 	ffmpegPath = ""
 	fmtString = ""
 	help bool
+)
 
 func init() {
 	getopt.FlagLong(&verbose, "verbose", 'v', "make script say more things")
@@ -32,7 +33,7 @@ func init() {
 	getopt.FlagLong(&ffprobePath, "ffprobe", 0, "path to specific ffprobe binary")
 	getopt.FlagLong(&ffmpegPath, "ffmpeg", 0, "path to specific ffmpeg binary")
 	getopt.FlagLong(&fmtString, "track-format", 'f', "track formatting")
-	getopt.FlagLong(&help, "h", "--help", "show help data")
+	getopt.FlagLong(&help, "help", 'h', "show help data")
 }
 
 func main() {
@@ -51,14 +52,16 @@ func main() {
 	}
 	
 	if ffprobePath == "" {
+		var b = []byte{}
 		var err error
 		
 		switch os := runtime.GOOS; os {
 		case "windows":
-			ffprobePath, err = exec.Command("where ffprobe").Output()
+			b, err = exec.Command("where ffprobe").Output()
 		default:
-			ffprobePath, err = exec.Command("which ffprobe").Output()
+			b, err = exec.Command("which ffprobe").Output()
 		}
+		ffprobePath = string(b)
 		
 		if err != nil {
 			fmt.Println("couldnt find ffprobe executable on your PATH. please specify with the --ffprobe option")
@@ -67,21 +70,25 @@ func main() {
 	}
 	
 	if ffmpegPath == "" {
+		var b = []byte{}
 		var err error
 		
 		switch os := runtime.GOOS; os {
 		case "windows":
-			ffmpegPath, err = exec.Command("where ffmpeg").Output()
+			b, err = exec.Command("where ffmpeg").Output()
 		default:
-			ffmpegPath, err = exec.Command("which ffmpeg").Output()
+			b, err = exec.Command("which ffmpeg").Output()
 		}
+		ffmpegPath = string(b)
 		
 		if err != nil {
 			fmt.Println("couldnt find ffmpeg executable on your PATH. please specify with the --ffmpeg option")
 			panic(err)
 		}
 	}
+	
+	bar := NewProgressBar(false)
 
-	videoData := getTags(formData, ffprobePath)
-	/*concatWav*/_ = makeVideo(videoData, ffmpegPath, fmtString)
+	videoData := getTags(bar, formData, ffprobePath)
+	/*concatWav*/_ = makeVideo(bar, videoData, ffmpegPath, fmtString)
 }

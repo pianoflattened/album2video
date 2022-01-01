@@ -21,7 +21,7 @@ func makeVideo(bar ProgressBar, videoData VideoData, ffmpegPath string, fmtStrin
 	length := time.Duration(0)
 	fileListContents := ""
 
-	setLabel("making file list..")
+	bar.Label = "making file list.."
 	for i, f := range videoData.audioFiles {
 		println(durationToString(length))
 		timestamps = append(timestamps, Timestamp{
@@ -39,7 +39,7 @@ func makeVideo(bar ProgressBar, videoData VideoData, ffmpegPath string, fmtStrin
 	}
 
 	if videoData.formData.extractCover { // first try :D
-		setLabel("extracting cover art..")
+		bar.Label = "extracting cover art.."
 		if videoData.audioFiles[0].cover == nil {
 			panic(errors.New("there is no cover art embedded into the first track. please tag your files properly"))
 		}
@@ -56,7 +56,7 @@ func makeVideo(bar ProgressBar, videoData VideoData, ffmpegPath string, fmtStrin
 		videoData.formData.coverPath = autoCoverFile.Name()
 	}
 
-	setLabel("calculating minimum framerate..")
+	bar.Label = "calculating minimum framerate.."
 	framerate := float64((1.0 * float64(time.Second)) / float64(length))
 	gop := framerate / 2.0
 	//framerate = math.Max(framerate, 1.0)
@@ -71,8 +71,8 @@ func makeVideo(bar ProgressBar, videoData VideoData, ffmpegPath string, fmtStrin
 		panic(err)
 	}
 
-	makeDeterminate()
-	setLabel("concatenating audio files..")
+	bar = NewProgressBar(true)
+	bar.Label = "concatenating audio files.."
 
 	cw, err := ioutil.TempFile(path.Dir(videoData.audioFiles[0].filename), ".CONCAT--[BIT_LY9099]--*.wav")
 	if err != nil {
@@ -95,7 +95,8 @@ func makeVideo(bar ProgressBar, videoData VideoData, ffmpegPath string, fmtStrin
 		m := concatScanner.Text()
 		a := re.FindAllStringSubmatch(m, -1)
 		c, _ := strconv.Atoi(a[len(a)-1][len(a[len(a)-1])-1])
-		setProgress(float64(time.Duration(c)*time.Microsecond)/float64(length))
+		bar.Progress = float64(time.Duration(c)*time.Microsecond)/float64(length)
+		fmt.Println((&bar).Render(float64(time.Duration(c)*time.Microsecond), float64(length)))
 	}
 
 	makeConcatWav.Wait()
@@ -103,11 +104,11 @@ func makeVideo(bar ProgressBar, videoData VideoData, ffmpegPath string, fmtStrin
 	fileList.Close()
 	err = os.Remove(fileList.Name())
 	if err != nil {
-		Println(err)
+		fmt.Println(err)
 	}
 
-	makeDeterminate()
-	setLabel("making output video..")
+	bar = NewProgressBar(true)
+	bar.Label = "making output video.."
 
 	// ffmpeg -progress pipe:2 -y -loop 0 -r [framerate] -i [cover image] -i [concat.wav] -tune stillimage -t [length] -r [framerate] -c:a aac -profile:a aac_low -b:a 384k -pix_fmt yuv420p -c:v libx264 -profile:v high -preset slow -crf 18 -g [framerate/2] -movflags faststart [out.mp4]
 
@@ -121,12 +122,14 @@ func makeVideo(bar ProgressBar, videoData VideoData, ffmpegPath string, fmtStrin
 
 	outputScanner := bufio.NewScanner(outputStderr)
 	outputScanner.Split(scanFFmpegChunks)
+	var c int
 	for outputScanner.Scan() {
 		m := outputScanner.Text()
 		//println(m)
 		a := re.FindAllStringSubmatch(m, -1)
-		c, _ := strconv.Atoi(a[len(a)-1][len(a[len(a)-1])-1])
-		setProgress(float64(time.Duration(c)*time.Microsecond)/float64(length))
+		c, _ = strconv.Atoi(a[len(a)-1][len(a[len(a)-1])-1])
+		bar.Progress = float64(time.Duration(c)*time.Microsecond)/float64(length)
+		fmt.Println((&bar).Render(float64(time.Duration(c)*time.Microsecond), float64(length)))
 	}
 
 	makeOutputVideo.Wait()
@@ -135,8 +138,9 @@ func makeVideo(bar ProgressBar, videoData VideoData, ffmpegPath string, fmtStrin
 		os.Remove(videoData.formData.coverPath)
 	}
 
-	formatTimestamps(timestamps, fmtString)
-	setComplete()
+	formatTimestamps(fmtString, timestamps)
+	bar.Complete = true
+	fmt.Println((&bar).Render(float64(time.Duration(c)*time.Microsecond), float64(length)))
 
 	return concatWavName
 }

@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/md5"
-	"encoding/json"
 	"fmt"
 	"math"
 	"reflect"
@@ -29,7 +28,7 @@ var err error // line 67 :(
 
 func formatTimestamps(fmtString string, timestamps []Timestamp) (formatted string) {
 	if len(fmtString) == 0 {
-		fmtStr = "%[ - >a%s - %t"
+		fmtString = "%[ - >a%s - %t"
 	}
 	
 	formatted = ""
@@ -72,9 +71,9 @@ func formatTimestamps(fmtString string, timestamps []Timestamp) (formatted strin
 		// i think this is the more robust way of doing it? skip over escaped % matches and then go back
 		// and fix them all?? may have to correct this
 		line = strings.ReplaceAll(line, "%%", "%")
-		o += line + "\n"
+		formatted += line + "\n"
 	}
-	return o
+	return
 }
 
 func firstNonZero(n interface{}, m ...interface{}) interface{} {

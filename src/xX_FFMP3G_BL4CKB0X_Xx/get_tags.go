@@ -21,9 +21,9 @@ const alphabet = "abcdefghijklmnopqrstuvwxyz"
 
 func getTags(bar ProgressBar, formData FormData, ffprobePath string) VideoData {
 	ffmpeg.SetFfProbePath(ffprobePath)
-	formData = validatePaths(formData)
+	formData = validatePaths(bar, formData)
 
-	setLabel("reading "+path.Base(formData.albumDirectory)+"..")
+	bar.Label = "reading "+path.Base(formData.albumDirectory)+".."
 	albumDirectoryFile, err := os.Open(formData.albumDirectory)
 	if err != nil {
 		panic(err)
@@ -45,7 +45,7 @@ func getTags(bar ProgressBar, formData FormData, ffprobePath string) VideoData {
 			os.Remove(path.Join(formData.albumDirectory, base)) // clean up after yrself
 			continue
 		}
-		setLabel("reading "+base+"..")
+		bar.Label = "reading "+base+".."
 		file := path.Join(formData.albumDirectory, base)
 		mime, err := mimetype.DetectFile(file)
 		if err != nil {
@@ -138,7 +138,7 @@ func getTags(bar ProgressBar, formData FormData, ffprobePath string) VideoData {
 		}
 	}
 
-	setLabel("ordering audio files..")
+	bar.Label = "ordering audio files.."
 	sort.Sort(byTrack(audioFiles))
 	if len(audioFiles) < 1 {
 		panic(errors.New("you need sound files in the album directory"))
@@ -153,7 +153,7 @@ func getTags(bar ProgressBar, formData FormData, ffprobePath string) VideoData {
 }
 
 func validatePaths(bar ProgressBar, formData FormData) FormData {
-	setLabel("validating album path..")
+	bar.Label = "validating album path.."
 	stats, err := os.Stat(formData.albumDirectory)
 	if err != nil {
 		panic(err)
@@ -167,7 +167,7 @@ func validatePaths(bar ProgressBar, formData FormData) FormData {
 	}
 
 	if !formData.extractCover {
-		setLabel("validating cover path..")
+		bar.Label = "validating cover path.."
 		stats, err = os.Stat(formData.coverPath)
 		if err != nil {
 			panic(err)
@@ -179,7 +179,7 @@ func validatePaths(bar ProgressBar, formData FormData) FormData {
 		}
 	}
 
-	setLabel("validating output path..")
+	bar.Label = "validating output path.."
 	stats, err = os.Stat(formData.outputPath)
 	if err != nil {
 		if os.IsNotExist(err) {
