@@ -2,8 +2,8 @@
 THIS IS A CLI NOW NOT AN ELECTRON APP FUCK ELECTRON ELECTRON DIES
 
 ## THINGS I NEED TO FIX
-\- substantial slowdown if the image is large - resize image to be 720px tall if it is bigger + option to disable
-\- if the image dimensions arent both even numbers it stops (yuv480p thing cant help it). going to crop out a row/col of pixels of the image in memory to fix
+\- substantial slowdown if the image is large - resize image to be 720px tall if it is bigger + option to disable <br>
+\- if the image dimensions arent both even numbers it stops (yuv480p thing cant help it). going to crop out a row/col of pixels of the image in memory to fix <br>
 
 ### track detection from filenames (for when ur stuffs not tagged)
 the regex is currently as follows:
