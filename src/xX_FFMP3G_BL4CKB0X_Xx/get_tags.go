@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Akumzy/ipc"
+	//"github.com/Akumzy/ipc"
 	"github.com/dhowden/tag"
 	"github.com/gabriel-vasile/mimetype"
 	ffmpeg "github.com/modfy/fluent-ffmpeg"
@@ -19,11 +19,11 @@ import (
 // i was on crack and drugs when i wrote this
 const alphabet = "abcdefghijklmnopqrstuvwxyz"
 
-func getTags(channel *ipc.IPC, formData FormData, ffprobePath string) VideoData {
+func getTags(bar ProgressBar, formData FormData, ffprobePath string) VideoData {
 	ffmpeg.SetFfProbePath(ffprobePath)
-	formData = validatePaths(channel, formData)
+	formData = validatePaths(formData)
 
-	setLabel(channel, "reading "+path.Base(formData.albumDirectory)+"..")
+	setLabel("reading "+path.Base(formData.albumDirectory)+"..")
 	albumDirectoryFile, err := os.Open(formData.albumDirectory)
 	if err != nil {
 		panic(err)
@@ -45,11 +45,12 @@ func getTags(channel *ipc.IPC, formData FormData, ffprobePath string) VideoData 
 			os.Remove(path.Join(formData.albumDirectory, base)) // clean up after yrself
 			continue
 		}
-		setLabel(channel, "reading "+base+"..")
+		setLabel("reading "+base+"..")
 		file := path.Join(formData.albumDirectory, base)
 		mime, err := mimetype.DetectFile(file)
 		if err != nil {
-			if !strings.HasSuffix(errors.Unwrap(err).Error(), "The handle is invalid.") {
+			if !(strings.HasSuffix(errors.Unwrap(err).Error(), "The handle is invalid.") || 
+				 strings.HasSuffix(errors.Unwrap(err).Error(), "is a directory")) {
 				panic(err)
 			}
 			continue
@@ -137,7 +138,7 @@ func getTags(channel *ipc.IPC, formData FormData, ffprobePath string) VideoData 
 		}
 	}
 
-	setLabel(channel, "ordering audio files..")
+	setLabel("ordering audio files..")
 	sort.Sort(byTrack(audioFiles))
 	if len(audioFiles) < 1 {
 		panic(errors.New("you need sound files in the album directory"))
@@ -151,8 +152,8 @@ func getTags(channel *ipc.IPC, formData FormData, ffprobePath string) VideoData 
 	}
 }
 
-func validatePaths(channel *ipc.IPC, formData FormData) FormData {
-	setLabel(channel, "validating album path..")
+func validatePaths(bar ProgressBar, formData FormData) FormData {
+	setLabel("validating album path..")
 	stats, err := os.Stat(formData.albumDirectory)
 	if err != nil {
 		panic(err)
@@ -166,7 +167,7 @@ func validatePaths(channel *ipc.IPC, formData FormData) FormData {
 	}
 
 	if !formData.extractCover {
-		setLabel(channel, "validating cover path..")
+		setLabel("validating cover path..")
 		stats, err = os.Stat(formData.coverPath)
 		if err != nil {
 			panic(err)
@@ -178,7 +179,7 @@ func validatePaths(channel *ipc.IPC, formData FormData) FormData {
 		}
 	}
 
-	setLabel(channel, "validating output path..")
+	setLabel("validating output path..")
 	stats, err = os.Stat(formData.outputPath)
 	if err != nil {
 		if os.IsNotExist(err) {

@@ -25,9 +25,7 @@ var err error // line 58 :(
    ([tsradnw\%]) - mode
 */
 
-func formatTracks(fmtString string, tracks string) string {
-	var timestamps []JSONTimestamp
-	json.Unmarshal([]byte(tracks), &timestamps)
+func formatTracks(fmtString string, timestamps []Timestamp) string {
 	o := ""
 
 	dominantArtist, multDiscs := calcDominantArtist(timestamps)
@@ -36,7 +34,7 @@ func formatTracks(fmtString string, tracks string) string {
 	matches := removeDuplicates(re.FindAllStringSubmatch(fmtString, -1))
 
 	for _, jtimestamp := range timestamps {
-		timestamp := jtimestamp.toTimestamp()
+		timestamp := jtimestamp.toFmtTimestamp()
 		line := fmtString
 		r := renderOptions{raw, -1, false, "", '_', dominantArtist, multDiscs}
 		for _, match := range matches {
@@ -95,7 +93,7 @@ func removeDuplicates(a [][]string) (b [][]string) {
 		if err != nil {
 			panic(err)
 		}
-		sum := md5.Sum(g)
+		sum := md5.Sum(g) // what the fuck was i on why am i using md5 here. fucking horrifying
 		if _, ok := keys[string(sum[:])]; !ok {
 			keys[string(sum[:])] = true
 			c := make([]string, len(e))

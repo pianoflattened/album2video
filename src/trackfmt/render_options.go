@@ -17,7 +17,7 @@ type renderOptions struct {
 	multDiscs      bool
 }
 
-func (r renderOptions) render(t Timestamp) string {
+func (r renderOptions) render(t FmtTimestamp) string {
 	s := r.valFromMode(t)
 
 	if strings.IndexRune("tdnw", r.mode) > -1 { // padding
@@ -58,7 +58,7 @@ func (r renderOptions) render(t Timestamp) string {
 }
 
 // time 2 whip out th reflect library for opaque bullshit >:)
-func (r renderOptions) valFromMode(t Timestamp) string {
+func (r renderOptions) valFromMode(t FmtTimestamp) string {
 	switch f := reflect.ValueOf(t).FieldByName(string([]rune{r.mode})); f.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return strconv.FormatInt(f.Int(), 10)

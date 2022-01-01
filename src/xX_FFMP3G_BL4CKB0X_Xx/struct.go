@@ -7,6 +7,15 @@ import (
 	"github.com/dhowden/tag"
 )
 
+type FieldCase int
+
+const (
+	raw FieldCase = iota
+	lower
+	title
+	upper
+)
+
 type AudioFile struct {
 	filename, artist, albumArtist, album, title, year string
 	track, disc                                       int
@@ -19,6 +28,7 @@ type FormData struct {
 	albumDirectory, coverPath   string
 	extractCover, separateFiles bool
 	outputPath                  string
+	verbose, quiet				bool
 }
 
 type VideoData struct {
@@ -44,4 +54,23 @@ func (t Timestamp) String() (s string) {
 		panic(err)
 	}
 	return string(b)
+}
+
+type FmtTimestamp struct {
+	r, a, s, t string
+	d, n, w    int
+}
+
+func (t Timestamp) toFmtTimestamp() FmtTimestamp {
+	return FmtTimestamp{t.Artist, t.Artist, t.Title, t.Time, t.Disc, t.Track, t.OverallTrack}
+}
+
+type renderOptions struct {
+	fCase          FieldCase
+	padding        int
+	ifExistsRight  bool
+	ifExists       string
+	mode           rune
+	dominantArtist string
+	multDiscs      bool
 }

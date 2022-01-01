@@ -1,11 +1,8 @@
 package main
 
-import (
-	"math"
-)
+import "math"
 
-func calcDominantArtist(timestamps []JSONTimestamp) (string, bool) {
-
+func calcDominantArtist(timestamps []Timestamp) (string, bool) {
 	var dominantArtist string
 	artists := make(map[string]int)
 	discs := 0

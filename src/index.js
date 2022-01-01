@@ -113,12 +113,12 @@ submitBtn.addEventListener('click', function() {
 	}
 
 	let formData = [
-        ack,
-        form.coverPath.value,
-        form.extractCover.checked,
-        form.separateVideos.checked,
-        form.outputPath.value
-    ];
+        ack, // album directory (default cwd)
+        form.coverPath.value, // cover path (black image if not specified)
+        form.extractCover.checked, // get cover from tags
+        form.separateVideos.checked, // make sound files into separate videos
+        form.outputPath.value // out (default cwd)
+    ]; // verbosity options
 
 	progressBar = new ProgressBar(document.querySelector(".progress-container"));
     progressBar.makeIndeterminate();

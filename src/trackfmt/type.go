@@ -9,21 +9,11 @@ const (
 	upper
 )
 
-type JSONTimestamp struct {
-	Artist       string `json:"artist"`
-	AlbumArtist  string `json:"albumArtist"`
-	Title        string `json:"title"`
-	Time         string `json:"time"`
-	Disc         int    `json:"disc"`
-	Track        int    `json:"track"`
-	OverallTrack int    `json:"overallTrack"`
+func (t Timestamp) toFmtTimestamp() FmtTimestamp {
+	return Timestamp{t.Artist, t.Artist, t.Title, t.Time, t.Disc, t.Track, t.OverallTrack}
 }
 
-func (j JSONTimestamp) toTimestamp() Timestamp {
-	return Timestamp{j.Artist, j.Artist, j.Title, j.Time, j.Disc, j.Track, j.OverallTrack}
-}
-
-type Timestamp struct {
+type FmtTimestamp struct {
 	r, a, s, t string
 	d, n, w    int
 }
