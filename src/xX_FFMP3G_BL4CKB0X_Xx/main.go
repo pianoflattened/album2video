@@ -38,7 +38,9 @@ func init() {
 
 func main() {
 	if help {
-		// !!!!!!!!!!! WHY IS THIS SO HARD 2 FIGURE OUT
+		// !!!!!!!!!!! WHY WAS THIS SO HARD 2 FIGURE OUT
+		getopt.Usage()
+		return
 	}
 	
 	formData := FormData{
@@ -57,9 +59,9 @@ func main() {
 		
 		switch os := runtime.GOOS; os {
 		case "windows":
-			b, err = exec.Command("where ffprobe").Output()
+			b, err = exec.Command("where", "ffprobe").Output()
 		default:
-			b, err = exec.Command("which ffprobe").Output()
+			b, err = exec.Command("which", "ffprobe").Output()
 		}
 		ffprobePath = string(b)
 		
@@ -75,9 +77,9 @@ func main() {
 		
 		switch os := runtime.GOOS; os {
 		case "windows":
-			b, err = exec.Command("where ffmpeg").Output()
+			b, err = exec.Command("where", "ffmpeg").Output()
 		default:
-			b, err = exec.Command("which ffmpeg").Output()
+			b, err = exec.Command("which", "ffmpeg").Output()
 		}
 		ffmpegPath = string(b)
 		
