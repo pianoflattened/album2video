@@ -23,7 +23,7 @@ func makeVideo(bar ProgressBar, videoData VideoData, ffmpegPath string, fmtStrin
 
 	bar.Label = "making file list.."
 	for i, f := range videoData.audioFiles {
-		println(durationToString(length))
+		//println(durationToString(length))
 		timestamps = append(timestamps, Timestamp{
 			Artist:       f.artist,
 			Title:        f.title,
@@ -96,7 +96,7 @@ func makeVideo(bar ProgressBar, videoData VideoData, ffmpegPath string, fmtStrin
 		a := re.FindAllStringSubmatch(m, -1)
 		c, _ := strconv.Atoi(a[len(a)-1][len(a[len(a)-1])-1])
 		bar.Progress = float64(time.Duration(c)*time.Microsecond)/float64(length)
-		fmt.Println((&bar).Render(float64(time.Duration(c)*time.Microsecond), float64(length)))
+		fmt.Print((&bar).Render(time.Duration(c)*time.Microsecond, length))
 	}
 
 	makeConcatWav.Wait()
@@ -129,7 +129,7 @@ func makeVideo(bar ProgressBar, videoData VideoData, ffmpegPath string, fmtStrin
 		a := re.FindAllStringSubmatch(m, -1)
 		c, _ = strconv.Atoi(a[len(a)-1][len(a[len(a)-1])-1])
 		bar.Progress = float64(time.Duration(c)*time.Microsecond)/float64(length)
-		fmt.Println((&bar).Render(float64(time.Duration(c)*time.Microsecond), float64(length)))
+		fmt.Print((&bar).Render(time.Duration(c)*time.Microsecond, length))
 	}
 
 	makeOutputVideo.Wait()
@@ -138,9 +138,9 @@ func makeVideo(bar ProgressBar, videoData VideoData, ffmpegPath string, fmtStrin
 		os.Remove(videoData.formData.coverPath)
 	}
 
-	formatTimestamps(fmtString, timestamps)
 	bar.Complete = true
-	fmt.Println((&bar).Render(float64(time.Duration(c)*time.Microsecond), float64(length)))
+	fmt.Println((&bar).Render(time.Duration(c)*time.Microsecond, length))
+	fmt.Println(formatTimestamps(fmtString, timestamps))
 
 	return concatWavName
 }

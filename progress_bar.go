@@ -5,6 +5,7 @@ import (
 	"os"
 	"math"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"golang.org/x/term"
@@ -30,7 +31,11 @@ func NewProgressBar(determinate bool) (bar ProgressBar) {
 	}
 }
 
-func (p *ProgressBar) Render(currentSize, completeSize float64) (bar string) {
+func (p *ProgressBar) Render(_currentSize, _completeSize time.Duration) (bar string) {
+	// grr
+	currentSize := fmtDuration(_currentSize)
+	completeSize := fmtDuration(_completeSize)
+	
 	bar = ""
 	width, _, err := term.GetSize(int(os.Stdout.Fd()))
 	
@@ -56,7 +61,7 @@ func (p *ProgressBar) Render(currentSize, completeSize float64) (bar string) {
 		return fmt.Sprintf("%s %s\r", spinnerStage, p.Label)
 		
 	} else {
-		minout := utf8.RuneCountInString(fmt.Sprintf("|░| 100%% (%.1f/%.1f MB)", completeSize, completeSize))
+		minout := utf8.RuneCountInString(fmt.Sprintf("|░| 100%% (%s/%s)", completeSize, completeSize))
 		pbarWidth := width-minout+1
 		pbarAmount := int(math.Floor(float64(pbarWidth) * (*p).Progress))
 		percentStr := fmt.Sprintf("%3.0f%%", (*p).Progress * 100)
@@ -76,13 +81,28 @@ func (p *ProgressBar) Render(currentSize, completeSize float64) (bar string) {
 						}
 						return percentStr
 					}
-					return fmt.Sprintf("%.1f/%.1f MB\r", currentSize, completeSize)
+					return fmt.Sprintf("%s/%s\r", currentSize, completeSize)
 				}
-				return fmt.Sprintf("(%.1f/%.1f MB)\r", currentSize, completeSize)
+				return fmt.Sprintf("(%s/%s)\r", currentSize, completeSize)
 			}
-			return fmt.Sprintf("%s (%.1f/%.1f MB)\r", percentStr, currentSize, completeSize)
+			return fmt.Sprintf("%s (%s/%s)\r", percentStr, currentSize, completeSize)
 		}
-		return fmt.Sprintf("|%s%s| %s (%.1f/%.1f MB)\r", strings.Repeat("█", pbarAmount), strings.Repeat("░", pbarWidth-pbarAmount), percentStr, currentSize, completeSize)
+		return fmt.Sprintf("|%s%s| %s (%s/%s)\r", strings.Repeat("█", pbarAmount), strings.Repeat("░", pbarWidth-pbarAmount), percentStr, currentSize, completeSize)
 	}
 	return
+}
+
+func fmtDuration(d time.Duration) string {
+    d = d.Round(time.Second)
+    h := d / time.Hour
+    d -= h * time.Hour
+    m := d / time.Minute
+    d -= m * time.Minute
+    s := d / time.Second
+    
+    if h < 1 {
+		return fmt.Sprintf("%02dm%02d", m, s)
+	} else {
+		return fmt.Sprintf("%02dh%02dm%02d", h, m, s)
+	}
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os/exec"
 	"runtime"
+	"strings"
 
 	"github.com/pborman/getopt/v2"
 )
@@ -18,7 +19,7 @@ var (
 	quiet bool
 	ffprobePath = ""
 	ffmpegPath = ""
-	fmtString = ""
+	fmtString = "%[ - >a%s - %t"
 	help bool
 )
 
@@ -65,7 +66,7 @@ func main() {
 		default:
 			b, err = exec.Command("which", "ffprobe").Output()
 		}
-		ffprobePath = string(b)
+		ffprobePath = strings.TrimSpace(string(b))
 		
 		if err != nil {
 			fmt.Println("couldnt find ffprobe executable on your PATH. please specify with the --ffprobe option")
@@ -83,7 +84,7 @@ func main() {
 		default:
 			b, err = exec.Command("which", "ffmpeg").Output()
 		}
-		ffmpegPath = string(b)
+		ffmpegPath = strings.TrimSpace(string(b))
 		
 		if err != nil {
 			fmt.Println("couldnt find ffmpeg executable on your PATH. please specify with the --ffmpeg option")
