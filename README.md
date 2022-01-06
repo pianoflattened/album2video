@@ -1,6 +1,6 @@
 ## album2video
 converts directory of mp3s -> video + tracklist
-i have only used this on linux but i tried to make it cross-platform. sorry if it doesnt work
+i have only used this on linux amd64 but i tried to make it cross-platform. sorry if it doesnt work
 
 ### building
 have git and go installed
