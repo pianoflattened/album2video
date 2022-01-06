@@ -14,11 +14,6 @@ go build -o bin
 ### using
 just run th executable that th command spits out (it will be in bin and called album2video). it has a help menu
 
-## THINGS I NEED TO ADD/FIX
-\- substantial slowdown if the image is large - resize image to be 720px tall if it is bigger + option to disable <br>
-\- if the image dimensions arent both even numbers it stops (yuv480p thing cant help it). going to crop out a row/col of pixels of the image in memory to fix <br>
-\- guessing artist/title from filenames
-
 ### track detection from filenames (for when ur stuffs not tagged)
 the regex is currently as follows:
 ```regex
@@ -52,3 +47,8 @@ v lowercase
 example (the format i use): `%v[ - >a%vs - %3vt`
 
 if nothing is entered the script will use `%[ - >a%s - %t`
+
+## THINGS I NEED TO ADD/FIX
+\- substantial slowdown if the image is large - resize image to be 720px tall if it is bigger + option to disable <br>
+\- if the image dimensions arent both even numbers it stops (yuv480p thing cant help it). going to crop out a row/col of pixels of the image in memory to fix <br>
+\- guessing artist/title from filenames
