@@ -1,9 +1,23 @@
 ## album2video
-THIS IS A CLI NOW NOT AN ELECTRON APP FUCK ELECTRON ELECTRON DIES
+converts directory of mp3s -> video + tracklist
+i have only used this on linux but i tried to make it cross-platform. sorry if it doesnt work
 
-## THINGS I NEED TO FIX
+### building
+have git and go installed
+```
+git clone https://github.com/pianoflattened/album2video
+cd album2video
+mkdir bin
+go build -o bin
+```
+
+### using
+just run th executable that th command spits out (it will be in bin and called album2video). it has a help menu
+
+## THINGS I NEED TO ADD/FIX
 \- substantial slowdown if the image is large - resize image to be 720px tall if it is bigger + option to disable <br>
 \- if the image dimensions arent both even numbers it stops (yuv480p thing cant help it). going to crop out a row/col of pixels of the image in memory to fix <br>
+\- guessing artist/title from filenames
 
 ### track detection from filenames (for when ur stuffs not tagged)
 the regex is currently as follows:
