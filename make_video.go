@@ -5,25 +5,169 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math"
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 )
 
+// lots of repeated code for running ffmpeg commands. please simplify
 func makeVideo(bar ProgressBar, videoData VideoData, ffmpegPath string, fmtString string) string {
 	timestamps := []Timestamp{}
 	length := time.Duration(0)
 	fileListContents := ""
+	re := regexp.MustCompile(`out_time_ms=(\d+)`)
+	var c int
+
+	// https://stackoverflow.com/questions/18434854/merge-m4a-files-in-terminal
+	// all sequences of m4a files need to go through this process
+	// then each concatenated sequence has to be converted to wav
 
 	bar.Label = "making file list.."
+	m4aSequence := []string{}
+	aacSequence := []string{}
+	
+	var extractAacStream *exec.Cmd
+	var aacStderr io.ReadCloser
+	var aacScanner *bufio.Scanner
+	
+	var aacToM4a *exec.Cmd
+	var aacToM4aStderr io.ReadCloser
+	var aacToM4aScanner *bufio.Scanner
+
+	var m4aToMp3 *exec.Cmd
+	var m4aToMp3Stderr io.ReadCloser
+	var m4aToMp3Scanner *bufio.Scanner
+	
 	for i, f := range videoData.audioFiles {
 		//println(durationToString(length))
+		fmt.Println(f.filename)
+		if strings.HasSuffix(f.filename, ".m4a") {
+			m4aSequence = append(m4aSequence, f.filename)
+		} else {
+			if len(m4aSequence) > 0 {
+				bar.Label = "m4a files found. extracting streams.."
+				
+				// extract all the aac streams
+				for _, m4a := range m4aSequence {
+					bar.Label = "extracting stream from '" + filepath.Base(m4a) + "'.."
+					aacSequence = append(aacSequence, strings.TrimSuffix(m4a, "m4a")+"aac")
+					extractAacStream = exec.Command(ffmpegPath, "-progress", "pipe:2", "-y", "-i", m4a, "-acodec", "copy", strings.TrimSuffix(m4a, "m4a")+"aac")
+					aacStderr, _ = extractAacStream.StderrPipe()
+					extractAacStream.Start()
+
+					aacScanner = bufio.NewScanner(aacStderr)
+					aacScanner.Split(scanFFmpegChunks)
+					for aacScanner.Scan() {
+						m := aacScanner.Text()
+						a := re.FindAllStringSubmatch(m, -1)
+						c, _ = strconv.Atoi(a[len(a)-1][len(a[len(a)-1])-1])
+						bar.Progress = float64(time.Duration(c)*time.Microsecond)/float64(length)
+						fmt.Print((&bar).Render(time.Duration(c)*time.Microsecond, length))
+					}
+					
+					extractAacStream.Wait()
+					bar.Complete = true
+					fmt.Println((&bar).Render(time.Duration(c)*time.Microsecond, length))
+					
+					bar = NewProgressBar(true)
+				}
+				
+				m4aSequence = []string{}
+
+				aacSequenceStr := ""
+				for _, aac := range aacSequence {
+					aacSequenceStr += shEscape(aac) + " "
+				}
+				
+				// concat them
+				ca, err := ioutil.TempFile(path.Dir(videoData.audioFiles[0].filename), ".CONCAT--[GOO_GL6066]--*.aac")
+				if err != nil {
+					panic(err)
+				}
+				defer os.Remove(ca.Name())
+				concatAacName := ca.Name()
+				ca.Close()
+				os.Remove(ca.Name()) // lol
+
+				bar.Label = "concatenating aac files.."
+				err = exec.Command("sh", "-c", "cat "+aacSequenceStr+"> "+concatAacName).Run()
+				if err != nil {
+					panic(err)
+				}
+
+				// convert to m4a
+				cm, err := ioutil.TempFile(path.Dir(videoData.audioFiles[0].filename), ".CONCAT--[T_CO7077]--*.m4a")
+				if err != nil {
+					panic(err)
+				}
+				defer os.Remove(cm.Name())
+				concatM4aName := cm.Name()
+				cm.Close()
+				os.Remove(cm.Name()) // lol
+				
+				aacToM4a = exec.Command(ffmpegPath, "-progress", "-pipe:2", "-y", "-i", concatAacName, "-acodec", "copy", "-bsf:a", "aac_adtstoasc", concatM4aName)
+				aacToM4aStderr, _ = aacToM4a.StderrPipe()
+				aacToM4a.Start()
+
+				aacToM4aScanner = bufio.NewScanner(aacToM4aStderr)
+				aacToM4aScanner.Split(scanFFmpegChunks)
+				for aacToM4aScanner.Scan() {
+					m := aacToM4aScanner.Text()
+					a := re.FindAllStringSubmatch(m, -1)
+					c, _ = strconv.Atoi(a[len(a)-1][len(a[len(a)-1])-1])
+					bar.Progress = float64(time.Duration(c)*time.Microsecond)/float64(length)
+					fmt.Print((&bar).Render(time.Duration(c)*time.Microsecond, length))
+				}
+
+				aacToM4a.Wait()
+				bar.Complete = true
+				fmt.Println((&bar).Render(time.Duration(c)*time.Microsecond, length))
+
+				// convert to mp3
+				// may be able to skip step above. fine for now
+				bar.Label = "converting concatenated file to mp3.."
+				cmm, err := ioutil.TempFile(path.Dir(videoData.audioFiles[0].filename), ".CONCAT--[ADF_LY8088]--*.mp3")
+				if err != nil {
+					panic(err)
+				}
+				defer os.Remove(cmm.Name())
+				concatMp3Name := cmm.Name()
+				cmm.Close()
+				os.Remove(cmm.Name()) // lol
+
+				// -q:a 0 is minimal quality loss. raise if it takes a bit too long but nothing past 4
+				m4aToMp3 = exec.Command(ffmpegPath, "-progress", "-pipe:2", "-y", "-i", concatM4aName, "-c:v", "copy", "-c:a", "libmp3lame", "-q:a", "0", concatMp3Name)
+				m4aToMp3Stderr, _ = m4aToMp3.StderrPipe()
+				m4aToMp3.Start()
+
+				m4aToMp3Scanner = bufio.NewScanner(m4aToMp3Stderr)
+				m4aToMp3Scanner.Split(scanFFmpegChunks)
+				for m4aToMp3Scanner.Scan() {
+					m := m4aToMp3Scanner.Text()
+					a := re.FindAllStringSubmatch(m, -1)
+					c, _ = strconv.Atoi(a[len(a)-1][len(a[len(a)-1])-1])
+					bar.Progress = float64(time.Duration(c)*time.Microsecond)/float64(length)
+					fmt.Print((&bar).Render(time.Duration(c)*time.Microsecond, length))
+				}
+
+				m4aToMp3.Wait()
+				bar.Complete = true
+				fmt.Println((&bar).Render(time.Duration(c)*time.Microsecond, length))
+
+				// add concat mp3 to filelist
+				fileListContents += "file '" + strings.ReplaceAll(concatMp3Name, `'`, `'\''`) + "'\n"
+				// hope the defer doesnt trigger until the whole thing finishes :(
+			}
+		}
+		
 		timestamps = append(timestamps, Timestamp{
 			Artist:       f.artist,
 			Title:        f.title,
@@ -88,18 +232,19 @@ func makeVideo(bar ProgressBar, videoData VideoData, ffmpegPath string, fmtStrin
 	concatStderr, _ := makeConcatWav.StderrPipe()
 	makeConcatWav.Start()
 
-	re := regexp.MustCompile(`out_time_ms=(\d+)`)
 	concatScanner := bufio.NewScanner(concatStderr)
 	concatScanner.Split(scanFFmpegChunks)
 	for concatScanner.Scan() {
 		m := concatScanner.Text()
 		a := re.FindAllStringSubmatch(m, -1)
-		c, _ := strconv.Atoi(a[len(a)-1][len(a[len(a)-1])-1])
+		c, _ = strconv.Atoi(a[len(a)-1][len(a[len(a)-1])-1])
 		bar.Progress = float64(time.Duration(c)*time.Microsecond)/float64(length)
 		fmt.Print((&bar).Render(time.Duration(c)*time.Microsecond, length))
 	}
 
 	makeConcatWav.Wait()
+	bar.Complete = true
+	fmt.Println((&bar).Render(time.Duration(c)*time.Microsecond, length))
 
 	fileList.Close()
 	err = os.Remove(fileList.Name())
@@ -122,10 +267,10 @@ func makeVideo(bar ProgressBar, videoData VideoData, ffmpegPath string, fmtStrin
 
 	outputScanner := bufio.NewScanner(outputStderr)
 	outputScanner.Split(scanFFmpegChunks)
-	var c int
+
 	for outputScanner.Scan() {
 		m := outputScanner.Text()
-		//println(m)
+		//fmt.Println(m)
 		a := re.FindAllStringSubmatch(m, -1)
 		c, _ = strconv.Atoi(a[len(a)-1][len(a[len(a)-1])-1])
 		bar.Progress = float64(time.Duration(c)*time.Microsecond)/float64(length)
@@ -176,6 +321,7 @@ func trimLeftChar(s string) string {
 	return s[:0]
 }
 
+// i am such a genius for writing this. wow. i am so cool
 func scanFFmpegChunks(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	if atEOF && len(data) == 0 {
 		return 0, nil, nil
@@ -198,4 +344,9 @@ func scanFFmpegChunks(data []byte, atEOF bool) (advance int, token []byte, err e
 	}
 
 	return 0, nil, nil
+}
+
+// gross
+func shEscape(str string) string {
+	return strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(str, "\\", "\\\\"), "\"", "\\\""), "'", "\\'"), " ", "\\ ")
 }

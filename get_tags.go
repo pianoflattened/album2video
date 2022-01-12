@@ -105,7 +105,7 @@ func getTags(bar ProgressBar, formData FormData, ffprobePath string) VideoData {
 					panic(errors.New("please make sure your filenames start with a track number if they " +
 						"are not tagged properly (which would be preferrable). for exact specifications as " +
 						"to what does and does not get detected as a track number see https://github.com/" +
-						"sunglasseds/album2video. if yr files are properly tagged and the track numbers " +
+						"pianoflattened/album2video. if yr files are properly tagged and the track numbers " +
 						"work then ffprobe is fucked and i have to use straight command output probably"))
 				}
 				track, disc = parseTrack(path.Base(file), trackRe)
