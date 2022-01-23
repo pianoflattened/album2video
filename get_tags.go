@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path"
 	"regexp"
@@ -41,7 +42,7 @@ func getTags(bar ProgressBar, formData FormData, ffprobePath string) VideoData {
 	trackRe := regexp.MustCompile(`^([0-9]+|[A-Za-z]{1,2}|[0-9]+[A-Za-z]|)([-_ ]| - |)([0-9]+|[A-Za-z])[ _.]`)
 
 	for _, base := range files {
-		if strings.HasPrefix(base, ".CONCAT--[BIT_LY9099]--") {
+		if strings.HasPrefix(base, ".CONCAT--") {
 			os.Remove(path.Join(formData.albumDirectory, base)) // clean up after yrself
 			continue
 		}
@@ -211,6 +212,7 @@ func getMetadata(filename string) tag.Metadata {
 	}
 	m, err := tag.ReadFrom(f)
 	if err != nil {
+		fmt.Println(filename)
 		panic(err)
 	}
 	err = f.Close()
