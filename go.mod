@@ -9,5 +9,6 @@ require (
 	github.com/kelindar/binary v1.0.17
 	github.com/modfy/fluent-ffmpeg v0.1.0
 	github.com/pborman/getopt/v2 v2.1.0
+	golang.org/x/image v0.0.0-20211028202545-6944b10bf410 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
 )

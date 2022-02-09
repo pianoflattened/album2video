@@ -19,7 +19,7 @@ import (
 )
 
 var re = regexp.MustCompile(`out_time_ms=(\d+)`)
-var bad_size = regexp.MustCompile(`\[libx264 @ 0x[0-9a-f]+\] height not divisible by 2 \([0-9]+x[0-9]+\)`)
+var bad_size = regexp.MustCompile(`\[libx264 @ 0x[0-9a-f]+\] height not divisible by 2 \(([0-9]+)x([0-9]+)\)`)
 const bufferSize = 65536
 
 // lots of repeated code for running ffmpeg commands. please simplify
@@ -149,37 +149,22 @@ func makeVideo(bar ProgressBar, videoData VideoData, ffmpegPath string, fmtStrin
 
 	// ffmpeg -progress pipe:2 -y -loop 0 -r [framerate] -i [cover image] -i [concat.wav] -tune stillimage -t [length] -r [framerate] -c:a aac -profile:a aac_low -b:a 384k -pix_fmt yuv420p -c:v libx264 -profile:v high -preset slow -crf 18 -g [framerate/2] -movflags faststart [out.mp4]
 
-	normalOptions := []string{"-progress", "pipe:2", "-y", "-loop", "0", "-r", fmt.Sprintf("%v", framerate), "-i", videoData.formData.coverPath, "-i", concatWavName, "-t", fmt.Sprintf("%v", length.Seconds()), "-r", fmt.Sprintf("%v", framerate)}
+	// normalOptions := []string{"-progress", "pipe:2", "-y", "-loop", "0", "-r", fmt.Sprintf("%v", framerate), "-i", videoData.formData.coverPath, "-i", concatWavName, "-t", fmt.Sprintf("%v", length.Seconds()), "-r", fmt.Sprintf("%v", framerate)}
+	normalOptions := []string{"-loop", "0", "-r", fmt.Sprintf("%v", framerate), "-i", videoData.formData.coverPath, "-i", concatWavName, "-t", fmt.Sprintf("%v", length.Seconds()), "-r", fmt.Sprintf("%v", framerate)}
 
 	youtubeOptions := []string{"-c:a", "aac", "-profile:a", "aac_low", "-b:a", "384k", "-pix_fmt", "yuv420p", "-c:v", "libx264", "-profile:v", "high", "-preset", "slow", "-crf", "18", "-g", fmt.Sprintf("%v", gop), "-movflags", "faststart"}
 
-	makeOutputVideo := exec.Command(ffmpegPath, append(normalOptions, append(youtubeOptions, videoData.formData.outputPath)...)...)
-	outputStderr, _ := makeOutputVideo.StderrPipe()
-	makeOutputVideo.Start()
-
-	outputScanner := bufio.NewScanner(outputStderr)
-	outputScanner.Split(scanFFmpegChunks)
-
-	for outputScanner.Scan() {
-		m := outputScanner.Text()
-		if bad_size.MatchString(m) {
-			panic(m)
-		}
-		fmt.Printf("%#v\n", m)
-		a := re.FindAllStringSubmatch(m, -1)
-		c, _ = strconv.Atoi(a[len(a)-1][len(a[len(a)-1])-1])
-		bar.Progress = float64(time.Duration(c)*time.Microsecond)/float64(length)
-		fmt.Print((&bar).Render(time.Duration(c)*time.Microsecond, length))
+	coverCrop := doFFmpeg(bar, length, ffmpegPath, append(normalOptions, append(youtubeOptions, videoData.formData.outputPath)...)...)
+	if len(coverCrop) > 0 {
+		normalOptions := []string{"-loop", "0", "-r", fmt.Sprintf("%v", framerate), "-i", coverCrop, "-i", concatWavName, "-t", fmt.Sprintf("%v", length.Seconds()), "-r", fmt.Sprintf("%v", framerate)}
+		doFFmpeg(bar, length, ffmpegPath, append(normalOptions, append(youtubeOptions, videoData.formData.outputPath)...)...)
+		os.Remove(coverCrop)
 	}
-
-	makeOutputVideo.Wait()
 
 	if videoData.formData.extractCover {
 		os.Remove(videoData.formData.coverPath)
 	}
-
-	bar.Complete = true
-	fmt.Println((&bar).Render(time.Duration(c)*time.Microsecond, length))
+	
 	fmt.Println(formatTimestamps(fmtString, timestamps))
 
 	return concatWavName
@@ -264,7 +249,7 @@ func concatM4aSequence(bar ProgressBar, m4aSequence []AudioFile, videoData Video
 	return
 }
 
-func doFFmpeg(bar ProgressBar, length time.Duration, ffmpegPath string, args ...string) {
+func doFFmpeg(bar ProgressBar, length time.Duration, ffmpegPath string, args ...string) string {
 	ffmpegCmd := exec.Command(ffmpegPath, append([]string{"-progress", "pipe:2", "-y"}, args...)...)
 	ffmpegStderr, _ := ffmpegCmd.StderrPipe()
 	ffmpegCmd.Start()
@@ -275,9 +260,11 @@ func doFFmpeg(bar ProgressBar, length time.Duration, ffmpegPath string, args ...
 	for ffmpegScanner.Scan() {
 		m := ffmpegScanner.Text()
 		if bad_size.MatchString(m) {
-			panic(m)
+			dim := bad_size.FindAllStringSubmatch(m, 1)[0]
+			w, _ := strconv.Atoi(dim[1])
+			h, _ := strconv.Atoi(dim[2])
+			return fixDimensions(ffmpegPath, args[5], w, h) // bam
 		}
-		//fmt.Println(m)
 		a := re.FindAllStringSubmatch(m, -1)
 		c, _ = strconv.Atoi(a[len(a)-1][len(a[len(a)-1])-1])
 		bar.Progress = float64(time.Duration(c)*time.Microsecond)/float64(length)
@@ -287,6 +274,7 @@ func doFFmpeg(bar ProgressBar, length time.Duration, ffmpegPath string, args ...
 	ffmpegCmd.Wait()
 	bar.Complete = true
 	fmt.Println((&bar).Render(time.Duration(c)*time.Microsecond, length))
+	return ""
 }
 
 func getConcatName(videoData VideoData, format string) (concatName string) {
@@ -361,4 +349,21 @@ func scanFFmpegChunks(data []byte, atEOF bool) (advance int, token []byte, err e
 // gross
 func shEscape(str string) string {
 	return strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(str, "\\", "\\\\"), "\"", "\\\""), "'", "\\'"), " ", "\\ ")
+}
+
+func fixDimensions(ffmpegPath, imgPath string, w, h int) string {
+	if h%2 == 1 { h -= 1 }
+	if w%2 == 1 { w -= 1 }
+	ext := filepath.Ext(imgPath)
+	cropName := ".__" + strings.TrimSuffix(imgPath, ext) + "_crop" + ext
+	
+	ffmpegCmd := exec.Command(ffmpegPath, "-y", "-i", imgPath, "-vf", fmt.Sprintf("crop=%d:%d:0:0", w, h), cropName)
+	fmt.Println([]string{ffmpegPath, "-y", "-i", imgPath, "-vf", fmt.Sprintf("\"crop=%d:%d:0:0\"", w, h), cropName})
+	o, err := ffmpegCmd.CombinedOutput()
+	if err != nil {
+		fmt.Println(string(o))
+		panic(err)
+	}
+	
+	return cropName
 }
