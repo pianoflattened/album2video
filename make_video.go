@@ -19,6 +19,7 @@ import (
 )
 
 var re = regexp.MustCompile(`out_time_ms=(\d+)`)
+var bad_size = regexp.MustCompile(`\[libx264 @ 0x[0-9a-f]+\] height not divisible by 2 \([0-9]+x[0-9]+\)`)
 const bufferSize = 65536
 
 // lots of repeated code for running ffmpeg commands. please simplify
@@ -38,7 +39,7 @@ func makeVideo(bar ProgressBar, videoData VideoData, ffmpegPath string, fmtStrin
 	for i, f := range videoData.audioFiles {
 		//println(durationToString(length))
 		if strings.HasSuffix(f.filename, ".m4a") {
-			fmt.Println(f.filename)
+			//fmt.Println(f.filename)
 			m4aSequence = append(m4aSequence, f)
 		} else {
 			if len(m4aSequence) > 0 {
@@ -99,7 +100,7 @@ func makeVideo(bar ProgressBar, videoData VideoData, ffmpegPath string, fmtStrin
 	}
 	defer os.Remove(fileList.Name())
 	_, err = fileList.Write([]byte(fileListContents))
-	fmt.Println(fileListContents)
+	//fmt.Println(fileListContents)
 	if err != nil {
 		panic(err)
 	}
@@ -117,7 +118,7 @@ func makeVideo(bar ProgressBar, videoData VideoData, ffmpegPath string, fmtStrin
 	os.Remove(cw.Name()) // lol
 
 	// ffmpeg -progress pipe:2 -y -f concat -safe 0 -i [filelist.txt] -c copy concat.wav
-	fmt.Println(ffmpegPath, "-progress", "pipe:2", "-y", "-f", "concat", "-safe", "0", "-i", fileList.Name(), "-c", "copy", concatWavName)
+	//fmt.Println(ffmpegPath, "-progress", "pipe:2", "-y", "-f", "concat", "-safe", "0", "-i", fileList.Name(), "-c", "copy", concatWavName)
 	makeConcatWav := exec.Command(ffmpegPath, "-progress", "pipe:2", "-y", "-f", "concat", "-safe", "0", "-i", fileList.Name(), "-c", "copy", concatWavName)
 	concatStderr, _ := makeConcatWav.StderrPipe()
 	makeConcatWav.Start()
@@ -126,10 +127,9 @@ func makeVideo(bar ProgressBar, videoData VideoData, ffmpegPath string, fmtStrin
 	concatScanner.Split(scanFFmpegChunks)
 	for concatScanner.Scan() {
 		m := concatScanner.Text()
-		fmt.Println(m)
 		a := re.FindAllStringSubmatch(m, -1)
 		c, _ = strconv.Atoi(a[len(a)-1][len(a[len(a)-1])-1])
-		fmt.Println(c)
+		//fmt.Println(c)
 		bar.Progress = float64(time.Duration(c)*time.Microsecond)/float64(length)
 		fmt.Print((&bar).Render(time.Duration(c)*time.Microsecond, length))
 	}
@@ -162,7 +162,10 @@ func makeVideo(bar ProgressBar, videoData VideoData, ffmpegPath string, fmtStrin
 
 	for outputScanner.Scan() {
 		m := outputScanner.Text()
-		//fmt.Println(m)
+		if bad_size.MatchString(m) {
+			panic(m)
+		}
+		fmt.Printf("%#v\n", m)
 		a := re.FindAllStringSubmatch(m, -1)
 		c, _ = strconv.Atoi(a[len(a)-1][len(a[len(a)-1])-1])
 		bar.Progress = float64(time.Duration(c)*time.Microsecond)/float64(length)
@@ -271,6 +274,9 @@ func doFFmpeg(bar ProgressBar, length time.Duration, ffmpegPath string, args ...
 	ffmpegScanner.Split(scanFFmpegChunks)
 	for ffmpegScanner.Scan() {
 		m := ffmpegScanner.Text()
+		if bad_size.MatchString(m) {
+			panic(m)
+		}
 		//fmt.Println(m)
 		a := re.FindAllStringSubmatch(m, -1)
 		c, _ = strconv.Atoi(a[len(a)-1][len(a[len(a)-1])-1])
