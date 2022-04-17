@@ -19,7 +19,7 @@ import (
 )
 
 var re = regexp.MustCompile(`out_time_ms=(\d+)`)
-var bad_size = regexp.MustCompile(`\[libx264 @ 0x[0-9a-f]+\] height not divisible by 2 \(([0-9]+)x([0-9]+)\)`)
+var bad_size = regexp.MustCompile(`\[libx264 @ 0x[0-9a-f]+\] (height|width) not divisible by 2 \(([0-9]+)x([0-9]+)\)`)
 const bufferSize = 65536
 
 // lots of repeated code for running ffmpeg commands. please simplify
@@ -261,8 +261,9 @@ func doFFmpeg(bar ProgressBar, length time.Duration, ffmpegPath string, args ...
 		m := ffmpegScanner.Text()
 		if bad_size.MatchString(m) {
 			dim := bad_size.FindAllStringSubmatch(m, 1)[0]
-			w, _ := strconv.Atoi(dim[1])
-			h, _ := strconv.Atoi(dim[2])
+			fmt.Printf("%#v\n", dim)
+			w, _ := strconv.Atoi(dim[2])
+			h, _ := strconv.Atoi(dim[3])
 			return fixDimensions(ffmpegPath, args[5], w, h) // bam
 		}
 		a := re.FindAllStringSubmatch(m, -1)
