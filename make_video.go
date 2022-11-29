@@ -18,6 +18,10 @@ import (
 	"time"
 )
 
+// https://video.stackexchange.com/questions/15468/non-monotonous-dts-on-concat-ffmpeg
+// [mp4 @ 0x5628f7379980] Non-monotonous DTS in output stream 0:1; previous: 13913295, current: 2308096; changing to 13913296. This may result in incorrect timestamps in the output file.
+
+
 var re = regexp.MustCompile(`out_time_ms=(\d+)`)
 var bad_size = regexp.MustCompile(`\[libx264 @ 0x[0-9a-f]+\] (height|width) not divisible by 2 \(([0-9]+)x([0-9]+)\)`)
 const bufferSize = 65536
@@ -37,7 +41,7 @@ func makeVideo(bar ProgressBar, videoData VideoData, ffmpegPath string, fmtStrin
 	m4aSequence := []AudioFile{}
 	
 	for i, f := range videoData.audioFiles {
-		//println(durationToString(length))
+		//ln(durationToString(length))
 		if strings.HasSuffix(f.filename, ".m4a") {
 			//fmt.Println(f.filename)
 			m4aSequence = append(m4aSequence, f)
@@ -259,6 +263,7 @@ func doFFmpeg(bar ProgressBar, length time.Duration, ffmpegPath string, args ...
 	ffmpegScanner.Split(scanFFmpegChunks)
 	for ffmpegScanner.Scan() {
 		m := ffmpegScanner.Text()
+		//fmt.Println(m)
 		if bad_size.MatchString(m) {
 			dim := bad_size.FindAllStringSubmatch(m, 1)[0]
 			fmt.Printf("%#v\n", dim)

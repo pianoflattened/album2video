@@ -98,7 +98,7 @@ func removeDuplicates(a [][]string) (b [][]string) {
 		if err != nil {
 			panic(err)
 		}
-		sum := md5.Sum(g) // what the fuck was i on why am i using md5 here. fucking horrifying
+		sum := md5.Sum(g)
 		if _, ok := keys[string(sum[:])]; !ok {
 			keys[string(sum[:])] = true
 			c := make([]string, len(e))

@@ -17,7 +17,7 @@ import (
 	ffmpeg "github.com/modfy/fluent-ffmpeg"
 )
 
-// i was on crack and drugs when i wrote this
+// cool line below
 const alphabet = "abcdefghijklmnopqrstuvwxyz"
 
 func getTags(bar ProgressBar, formData FormData, ffprobePath string) VideoData {
@@ -37,6 +37,7 @@ func getTags(bar ProgressBar, formData FormData, ffprobePath string) VideoData {
 	discTracks := make(map[int]int)
 	audioFiles := []AudioFile{}
 	imageFiles := []string{}
+	mimes := []string{}
 
 	// wrote this myself :D i'll probably have to change it sometime
 	trackRe := regexp.MustCompile(`^([0-9]+|[A-Za-z]{1,2}|[0-9]+[A-Za-z]|)([-_ ]| - |)([0-9]+|[A-Za-z])[ _.]`)
@@ -57,6 +58,8 @@ func getTags(bar ProgressBar, formData FormData, ffprobePath string) VideoData {
 			continue
 		}
 
+		mimes = append(mimes, mime.String())
+		
 		switch strings.Split(mime.String(), "/")[0] {
 		case "audio":
 			var disc, track int
@@ -142,7 +145,8 @@ func getTags(bar ProgressBar, formData FormData, ffprobePath string) VideoData {
 	bar.Label = "ordering audio files.."
 	sort.Sort(byTrack(audioFiles))
 	if len(audioFiles) < 1 {
-		panic(errors.New("you need sound files in the album directory"))
+		mimesStr := genMimesStr(mimes)
+		panic(errors.New("you need sound files in the album directory. only got " + mimesStr))
 	}
 
 	return VideoData{
@@ -285,4 +289,12 @@ func overallTrackNumber(track, disc int, discTracks *map[int]int) (n int) {
 		n += (*discTracks)[i]
 	}
 	return n
+}
+
+func genMimesStr(mimes []string) string {
+    k := make(map[string]int)
+    for _, v := range mimes {
+        k[v] = k[v]+1
+    }
+    return fmt.Sprintf("%v", k)[3:]
 }
